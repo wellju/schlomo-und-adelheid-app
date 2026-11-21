@@ -16,8 +16,11 @@ def contracts_dir() -> Path:
         return Path(env)
     if getattr(sys, "frozen", False):  # PyInstaller bundle: contracts are shipped as data
         return Path(sys._MEIPASS) / "contracts"
+    here = Path(__file__).resolve()
+    if (here.parents[1] / "contracts").is_dir():  # delivered bundle: app/schlomo_engine next to app/contracts
+        return here.parents[1] / "contracts"
     # src/schlomo_engine/contracts.py -> repo root is three levels above src/
-    return Path(__file__).resolve().parents[3] / "contracts"
+    return here.parents[3] / "contracts"
 
 
 @lru_cache(maxsize=1)

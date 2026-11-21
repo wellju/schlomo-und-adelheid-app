@@ -127,7 +127,8 @@ def test_mcp_start_lists_tool_and_loads_no_recognition(env):
         send({"jsonrpc": "2.0", "id": 2, "method": "tools/list"})
         # docs/listen.md minus speichere_protokoll (Task 3) and the Task-5 tools
         assert sorted(t["name"] for t in receive(2)["result"]["tools"]) == sorted([
-            "liste_sitzungen", "hole_gutachten_input", "hole_pruefpaket", "pruefe_fachregeln", "pruefe_belege",
+            "liste_sitzungen", "hole_gutachten_input", "hole_goldfisch_paket", "hole_stil_paket",
+            "hole_elefant_paket", "hole_diagnose_paket", "pruefe_fachregeln", "pruefe_belege",
             "speichere_entwurf", "hole_entwurf", "speichere_befunde", "hole_stilprofil", "hole_probetexte",
             "speichere_stilprofil", "speichere_diagnosevorschlag", "hole_wissensbasis"])
     finally:

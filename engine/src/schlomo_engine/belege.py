@@ -7,6 +7,10 @@ from . import derive, rules
 from .config import Config
 
 NUMBER = re.compile(r"\d+(?:[.,]\d+)?")
+# A school psychologist recommends the SPF, the education authority decides; "festgestellt" claims a decision
+# (Nachtrag 1, Gutachtenstruktur, Empfehlung).
+SPF_BEGRIFF = re.compile(r"\bSPF\b|sonderpädagogische\w*\s+Förderbedarf", re.IGNORECASE)
+FESTGESTELLT = re.compile(r"\bfestgestellt\b|\bstell(?:t|en)\b[^.]{0,80}\bfest\b|\bFeststellung\b", re.IGNORECASE)
 
 
 _INDEX = re.compile(r"0|[1-9][0-9]*")
@@ -50,7 +54,13 @@ def pruefe_belege(output: dict, gi: dict, cfg: Config) -> list[dict]:
     used_names = {t["verfahren"] for t in gi.get("testergebnisse", [])}
     allowed_codes = {rules.icd_norm(gi["gutachten_diagnose"]["icd10_code"])}         if gi.get("gutachten_diagnose", {}).get("icd10_code") else set()
     texts = []
+    q1 = "klinische_psychologin" in gi.get("verfasserin", {}).get("qualifikationen", [])
     for a_i, a in enumerate(output["abschnitte"]):
+        if a["abschnitt_id"] == "diagnose":  # schema description: never in spf, otherwise only with Q1
+            if output["gutachtentyp"] == "spf":
+                problems.append({"feld": f"/abschnitte/{a_i}", "problem": "diagnose_im_spf"})
+            elif not q1:
+                problems.append({"feld": f"/abschnitte/{a_i}", "problem": "diagnose_ohne_q1"})
         for p_i, absatz in enumerate(a.get("absaetze", [])):
             for s_i, satz in enumerate(absatz["saetze"]):
                 where = f"/abschnitte/{a_i}/absaetze/{p_i}/saetze/{s_i}"
@@ -80,6 +90,8 @@ def pruefe_belege(output: dict, gi: dict, cfg: Config) -> list[dict]:
                 for code in rules.ICD_CODE.findall(satz["text"]):
                     if rules.icd_norm(code) not in allowed_codes:
                         problems.append({"feld": where, "problem": "code_nicht_im_input"})
+                if output["gutachtentyp"] == "spf" and SPF_BEGRIFF.search(satz["text"])                         and FESTGESTELLT.search(satz["text"]):
+                    problems.append({"feld": where, "problem": "festgestellt_statt_empfohlen"})
                 texts.append((where, satz["text"]))
         for t_i, tabelle in enumerate(a.get("tabellen", [])):
             where = f"/abschnitte/{a_i}/tabellen/{t_i}"

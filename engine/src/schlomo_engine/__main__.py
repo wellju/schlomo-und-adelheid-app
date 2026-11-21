@@ -1,12 +1,16 @@
-"""Entry point: `engine ui` (app sidecar, JSON lines) or `engine mcp` (MCP server)."""
+"""Entry point: `engine ui` (app sidecar, JSON lines), `engine mcp` (MCP server) or `engine hook` (PreToolUse hook
+of the working folder)."""
 import argparse
 import sys
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="engine")
-    parser.add_argument("startart", choices=["ui", "mcp"])
+    parser.add_argument("startart", choices=["ui", "mcp", "hook"])
     args = parser.parse_args(argv)
+    if args.startart == "hook":
+        from .hook import main as hook_main  # stdlib only, starts fast
+        return hook_main()
     if args.startart == "ui":
         sys.stdin.reconfigure(encoding="utf-8")
         sys.stdout.reconfigure(encoding="utf-8")

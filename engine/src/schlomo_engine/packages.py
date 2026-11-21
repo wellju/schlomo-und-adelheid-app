@@ -64,6 +64,24 @@ def released_stilprofil() -> dict | None:
     return max(released, key=lambda p: _version_key(p["version"])) if released else None
 
 
+def stilprofil_fuer_claude(profil: dict) -> dict:
+    """Features and phrasing examples without the sample quotes: they come from reports of other cases and are not
+    needed to write or review a draft (stilprofil.schema.json#/$defs/fuer_claude, EGM Task 2 E30)."""
+    return {"schema_version": profil["schema_version"], "version": profil["version"],
+            "merkmale": [{k: m[k] for k in ("merkmal_id", "kategorie", "beschreibung")} for m in profil["merkmale"]],
+            "formulierungsbeispiele": profil["formulierungsbeispiele"]}
+
+
+def free_version(wanted: str) -> str:
+    """The wanted version if no profile has it, else the next free "v<n>". A chat cannot see the stored versions,
+    so its return names "v1" (Task 2.5); the MCP path keeps refusing an existing version instead."""
+    taken = {p.stem for p in stilprofile_dir().glob("*.json")}
+    if re.sub(r"[^\w.-]", "_", wanted) not in taken:
+        return wanted
+    numbers = [int(m[1]) for name in taken if (m := re.fullmatch(r"v(\d+)", name))]
+    return f"v{max(numbers, default=0) + 1}"
+
+
 def save_stilprofil(profil: dict) -> dict:
     """A returned profile is always a new draft: status entwurf, never over an existing version, written whole
     (listen.md: release only in the app; EGM E36)."""
@@ -129,11 +147,13 @@ def inhalt(record: dict, art: str, cfg: Config, args: dict) -> dict:
         return {"vignette": str(args.get("vignette", "")), "schlussfolgerung": str(args.get("schlussfolgerung", ""))}
     if art == "stil_lernen":
         # only documents imported as sample reports, never the other documents of a case (EGM E49)
-        texts = [d["text_anonymisiert"] for d in record["session"]["dokumente"]
-                 if "text_anonymisiert" in d and d["quelle_rolle"] == PROBEGUTACHTEN]
-        if not texts:
+        docs = [d for d in record["session"]["dokumente"]
+                if "text_anonymisiert" in d and d["quelle_rolle"] == PROBEGUTACHTEN]
+        if not docs:
             raise EngineError("E_NICHT_GEFUNDEN")
-        return {"probetexte": [{"probe_id": new_id("pg"), "text": t[:100000]} for t in texts[:10]]}
+        # probe_id stable per document (pg- plus the neutral dok_id suffix), so a quote can be traced back later
+        return {"probetexte": [{"probe_id": "pg-" + d["dok_id"][2:], "text": d["text_anonymisiert"][:100000]}
+                               for d in docs[:10]]}
     gi, draft = _record_parts(record)
     fresh = rules.fuer_claude(rules.pruefe_fachregeln(gi, cfg))
     if art == "gutachten":
@@ -142,7 +162,7 @@ def inhalt(record: dict, art: str, cfg: Config, args: dict) -> dict:
         out = {"gutachten_input": gi, "regelergebnis": fresh, "vorlage": _vorlage_for(gi),
                "kategorien": kategorien(gi, cfg), "bausteine": bausteine(gi, cfg)}
         if profil := released_stilprofil():
-            out["stilprofil"] = profil
+            out["stilprofil"] = stilprofil_fuer_claude(profil)
         return out
     if art == "diagnosevorschlag":
         if not q1(gi):
@@ -156,10 +176,11 @@ def inhalt(record: dict, art: str, cfg: Config, args: dict) -> dict:
         profil = released_stilprofil()
         if profil is None:
             raise EngineError("E_NICHT_GEFUNDEN")
-        return {"entwurf": draft, "stilprofil": profil}
+        return {"entwurf": draft, "stilprofil": stilprofil_fuer_claude(profil)}
     if art == "pruefung_goldfisch":
         return {"fragestellung": gi["vorstellungsgrund"]["text"][:20000], "ergebnis_text": draft_text(draft, gi, cfg)[:100000],
-                "kriterien": wissen("goldfisch-kriterien.md")[:20000]}
+                "kriterien": wissen("goldfisch-kriterien.md")[:20000],
+                "gutachtentyp": gi["gutachtentyp"]}  # spf: weigh judging language more (Nachtrag 1)
     if art == "pruefung_elefant":
         return {"gutachten_input": gi, "entwurf": draft, "regelergebnis": fresh, "kategorien": kategorien(gi, cfg),
                 "bausteine": bausteine(gi, cfg)}
@@ -197,10 +218,16 @@ def make_package(record: dict, art: str, cfg: Config, args: dict) -> dict:
 
 
 def extract_json(text: str) -> dict:
-    """Accept the bare JSON or the first fenced code block from a chat answer."""
-    m = re.search(r"```(?:json)?\s*(.*?)```", text, re.S)
+    """Accept the bare JSON or the one fenced code block of a chat answer. Two or more blocks are refused: each
+    package takes exactly one return block (Nachtrag 1, Abläufe), and the app must not guess which one is meant."""
+    if not isinstance(text, str):
+        raise EngineError("E_SCHEMA", "json")
+    # fences of three or more backticks, language tag in any case (EGM Task 2 E20)
+    blocks = [m[1] for m in re.findall(r"(`{3,})[ \t]*(?:json)?[ \t]*\r?\n(.*?)\1", text, re.S | re.I)]
+    if len(blocks) > 1:
+        raise EngineError("E_SCHEMA", "json")
     try:
-        data = json.loads(m.group(1) if m else text)
+        data = json.loads(blocks[0] if blocks else text)
     except (json.JSONDecodeError, TypeError):
         raise EngineError("E_SCHEMA", "json")
     if not isinstance(data, dict):
@@ -273,7 +300,7 @@ def read_return(record: dict, text: str, cfg: Config) -> dict:
         record.setdefault("diagnosevorschlaege", []).append(check_claude_proposal(data["daten"], record, cfg))
         result = {"diagnosevorschlag": "gespeichert"}
     elif typ == "stilprofil":
-        result = {"stilprofil": save_stilprofil(data["daten"])["version"]}
+        result = {"stilprofil": save_stilprofil(data["daten"] | {"version": free_version(data["daten"]["version"])})["version"]}
     else:
         raise EngineError("E_PAKET_FREMD")
     # The package is closed first: a crash in between loses this return but never allows a second one (EGM E55).

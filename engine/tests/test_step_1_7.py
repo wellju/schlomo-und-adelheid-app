@@ -452,7 +452,7 @@ def _template_with_traces(path: Path) -> None:
         z.writestr("word/_rels/settings.xml.rels", '<?xml version="1.0"?><Relationships xmlns="http://schemas.'
                    'openxmlformats.org/package/2006/relationships"><Relationship Id="rIdT" Type="http://schemas.'
                    'openxmlformats.org/officeDocument/2006/relationships/attachedTemplate" '
-                   'Target="file:///C:/Users/SYN-USER/Vorlage.dotm" TargetMode="External"/></Relationships>')
+                   'Target="file:///D:/Profile/SYN-USER/Vorlage.dotm" TargetMode="External"/></Relationships>')
         z.writestr("docProps/custom.xml", "<Properties><property name='SYN-CUSTOM'/></Properties>")
     path.write_bytes(out.getvalue())
 
@@ -750,7 +750,7 @@ def test_mcp_log_and_errors_hold_no_content(full):
         outputs = [call(i, {"jsonrpc": "2.0", "id": i, "method": "tools/call", "params": {"name": n, "arguments": a}})
                    for i, (n, a) in enumerate([
                        ("hole_gutachten_input", {"session_id": sid}), ("pruefe_fachregeln", {"session_id": sid}),
-                       ("hole_pruefpaket", {"session_id": sid, "rolle": "elefant"}),
+                       ("hole_elefant_paket", {"session_id": sid}),
                        ("hole_entwurf", {"session_id": f"s-{INTERN}"}),
                        ("hole_entwurf", {"session_id": {"text": INTERN}}),
                        ("speichere_diagnosevorschlag", {"session_id": sid, "vorschlag": {"text": INTERN}})], 2)]

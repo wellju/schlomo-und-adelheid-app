@@ -50,7 +50,7 @@ def test_packages_are_valid_and_never_leak(full, art):
     assert INTERN not in raw and "interne_diagnose" not in raw and "awmf_" not in raw
     assert "schweregrad" not in raw and ".docx" not in raw and "Vorlage SPF" not in raw
     if art == "pruefung_goldfisch":
-        assert set(paket["inhalt"]) == {"fragestellung", "ergebnis_text", "kriterien"}
+        assert set(paket["inhalt"]) == {"fragestellung", "ergebnis_text", "kriterien", "gutachtentyp"}
 
 
 def test_package_blocked_when_recognition_hits(full):
@@ -162,16 +162,14 @@ def test_q1_and_blind_comparison(full):
 
 def test_mcp_tools_never_return_internal_diagnosis(full):
     sid = full["sid"]
-    outputs = [m.liste_sitzungen(), m.hole_gutachten_input(sid), m.hole_pruefpaket(sid, "elefant"),
-               m.hole_pruefpaket(sid, "goldfisch"), m.hole_pruefpaket(sid, "stil"), m.pruefe_fachregeln(sid),
+    outputs = [m.liste_sitzungen(), m.hole_gutachten_input(sid), m.hole_elefant_paket(sid),
+               m.hole_goldfisch_paket(sid), m.hole_stil_paket(sid), m.pruefe_fachregeln(sid),
                m.pruefe_belege(sid), m.hole_entwurf(sid), m.hole_stilprofil(), m.hole_wissensbasis("goldfisch-kriterien.md")]
     raw = json.dumps(outputs, ensure_ascii=False)
     assert INTERN not in raw and "interne_diagnose" not in raw and "awmf_" not in raw and "schweregrad" not in raw
     with pytest.raises(ToolError) as e:
         m.hole_wissensbasis("../geheim.md")
     assert str(e.value) == "E_SCHEMA"
-    with pytest.raises(ToolError):
-        m.hole_pruefpaket(sid, "unbekannt")
     assert m.speichere_stilprofil(STILPROFIL | {"version": "syn-2"})["status"] == "entwurf"  # always draft
     with pytest.raises(ToolError) as e:  # never over an existing, here the released, profile (E36)
         m.speichere_stilprofil(STILPROFIL)

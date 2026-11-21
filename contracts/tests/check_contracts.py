@@ -227,6 +227,16 @@ IC = "icd10-referenz.schema.json"
 expect(IC, {"schema_version": "1", "version": "test", "quelle": "synthetisch", "herkunft": "synthetisch", "codes": [{"code": "X99.9", "titel": "synthetisch"}]}, True, "synthetische ICD-Liste")
 expect(IC, {"schema_version": "1", "version": "test", "quelle": "synthetisch", "herkunft": "synthetisch", "codes": [{"code": "x99", "titel": "y"}]}, False, "ungueltiger Code")
 
+# Task 2.6 (EGM Task 2: E06, E28, E30)
+expect(FP, dict(gf, inhalt=dict(gf["inhalt"], gutachtentyp="spf")), True, "Goldfisch-Paket mit Gutachtentyp")
+expect(FP, dict(gf, inhalt=dict(gf["inhalt"], gutachtentyp="anderes")), False, "Goldfisch-Paket mit unbekanntem Typ")
+dg = copy(gi); dg["gutachtentyp"] = "lrs"; dg["gutachten_diagnose"] = {"text": "x"}
+expect(FP, dict(dp, inhalt={"gutachten_input": dg}), False, "Diagnosevorschlag-Paket mit Diagnose der Psychologin")
+sp_c = {"schema_version": "1", "version": "1", "merkmale": [{"merkmal_id": "m1", "kategorie": "satzbau", "beschreibung": "x"}],
+        "formulierungsbeispiele": [{"abschnitt_id": "empfehlung", "text": "x"}]}
+expect(FP, dict(gp, inhalt=dict(gp["inhalt"], stilprofil=sp_c)), True, "Gutachten-Paket mit Stilprofil ohne Zitate")
+expect(FP, dict(gp, inhalt=dict(gp["inhalt"], stilprofil=sp)), False, "Gutachten-Paket mit Belegzitaten")
+
 if failures:
     print("\n".join(failures))
     print(f"FEHLER: {len(failures)} von {checks} Pruefungen")

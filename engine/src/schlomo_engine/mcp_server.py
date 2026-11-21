@@ -61,14 +61,34 @@ def hole_gutachten_input(session_id: str) -> dict:
     return _inhalt(session_id, "gutachten")
 
 
+# One tool per reviewer with a fixed role: a subagent's tools list then limits the data it can reach, not only
+# its prompt (EGM Task 2 E01; ADR 0001, enforcement in code).
 @mcp.tool()
 @_codes
-def hole_pruefpaket(session_id: str, rolle: str) -> dict:
-    """Exactly the fields allowed for the reviewer role: stil, goldfisch (question and result only) or elefant."""
-    art = {"stil": "pruefung_stil", "goldfisch": "pruefung_goldfisch", "elefant": "pruefung_elefant"}.get(rolle)
-    if art is None:
-        raise EngineError("E_SCHEMA", "argumente")
-    return _inhalt(session_id, art)
+def hole_goldfisch_paket(session_id: str) -> dict:
+    """Only question and result text plus the criteria, for the Goldfisch."""
+    return _inhalt(session_id, "pruefung_goldfisch")
+
+
+@mcp.tool()
+@_codes
+def hole_stil_paket(session_id: str) -> dict:
+    """Draft and released style profile (without sample quotes), for the style review."""
+    return _inhalt(session_id, "pruefung_stil")
+
+
+@mcp.tool()
+@_codes
+def hole_elefant_paket(session_id: str) -> dict:
+    """Input, draft, rule result (fuer_claude), categories and blocks, for the Elefant."""
+    return _inhalt(session_id, "pruefung_elefant")
+
+
+@mcp.tool()
+@_codes
+def hole_diagnose_paket(session_id: str) -> dict:
+    """Only with Q1: input without the psychologist's diagnosis and without draft, for the blind comparison."""
+    return _inhalt(session_id, "diagnosevorschlag")
 
 
 @mcp.tool()
@@ -89,7 +109,13 @@ def pruefe_belege(session_id: str, entwurf: dict | None = None) -> list[dict]:
     """Every number, test name and code in the draft must stand in the input; every source pointer must resolve.
     Without a draft argument the current draft is checked."""
     record = _record(session_id)
-    draft = entwurf or (record.get("entwuerfe") or [None])[-1]
+    if entwurf is not None:
+        # a draft from Claude is checked against the schema first, so a broken one gives E_SCHEMA, not E_INTERN; an
+        # empty dict is a draft too and never silently replaced by the stored one (EGM Task 2 E19)
+        validate("gutachten-output", entwurf | {"entwurf_version": entwurf.get("entwurf_version", 1)})
+        draft = entwurf
+    else:
+        draft = (record.get("entwuerfe") or [None])[-1]
     if draft is None or "gutachten_input" not in record:
         raise EngineError("E_NICHT_GEFUNDEN")
     return belege.pruefe_belege(draft, record["gutachten_input"], config.load())
@@ -133,11 +159,13 @@ def speichere_befunde(session_id: str, rolle: str, befunde: list[dict]) -> dict:
 @mcp.tool()
 @_codes
 def hole_stilprofil() -> dict:
-    """The released style profile with short phrasing examples."""
+    """The released style profile: features and short phrasing examples, without sample quotes."""
     profil = packages.released_stilprofil()
     if profil is None:
         raise EngineError("E_NICHT_GEFUNDEN")
-    return profil
+    result = packages.stilprofil_fuer_claude(profil)
+    validate("stilprofil", result, "fuer_claude")
+    return result
 
 
 @mcp.tool()

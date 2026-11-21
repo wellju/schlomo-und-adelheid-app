@@ -1,0 +1,60 @@
+# Builds the engine on a Windows runner and runs the smoke test against both builds. Windows Server has no Smart App
+# Control, so this checks the builds as on a device where it is switched off. Synthetic data only.
+name: engine-windows
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-smoke:
+    runs-on: windows-latest
+    timeout-minutes: 90
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Python packages
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r engine/requirements.txt pyinstaller==6.22.3 packaging==26.3
+          python -m pip install https://github.com/explosion/spacy-models/releases/download/de_core_news_md-3.8.0/de_core_news_md-3.8.0-py3-none-any.whl
+
+      - name: Tesseract with German
+        run: |
+          choco install tesseract -y --no-progress
+          Invoke-WebRequest https://github.com/tesseract-ocr/tessdata_fast/raw/main/deu.traineddata -OutFile "C:\Program Files\Tesseract-OCR\tessdata\deu.traineddata"
+          & "C:\Program Files\Tesseract-OCR\tesseract.exe" --list-langs
+
+      - name: Contracts
+        run: python -I contracts/tests/check_contracts.py contracts
+
+      - name: Tests
+        working-directory: engine
+        run: python -m pytest -q
+
+      - name: Build with PyInstaller
+        run: python -I scripts/build_pyinstaller.py "${{ github.workspace }}\out\pyinstaller"
+
+      - name: Smoke test PyInstaller build
+        working-directory: engine
+        run: python tests/smoke_frozen.py "${{ github.workspace }}\out\pyinstaller\engine\engine.exe"
+
+      - name: Build with embeddable Python
+        run: |
+          Invoke-WebRequest https://www.python.org/ftp/python/3.14.2/python-3.14.2-embed-amd64.zip -OutFile embed.zip
+          python -I scripts/build_engine.py embed.zip "${{ github.workspace }}\out\bundle"
+
+      - name: Smoke test embeddable Python build
+        working-directory: engine
+        run: python tests/smoke_frozen.py "${{ github.workspace }}\out\bundle\python\python.exe" -m schlomo_engine

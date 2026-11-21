@@ -5,7 +5,10 @@ Case documents never leave the device in clear text: a local engine imports them
 other identifiers, and releases only anonymised text after the psychologist has decided every uncertain finding.
 Rule checks, evidence checks and the DOCX export run deterministically in the engine, without a language model.
 
-Status: engine (Task 1) built and tested; app (Tauri), Claude plugin and installer follow.
+Status: engine (Task 1) and Claude agent (Task 2) built and tested; app (Tauri) and installer follow.
+
+Windows: Smart App Control in enforcement blocks unsigned libraries of the packages (spaCy, numpy and others).
+The tool is meant for devices where it is switched off.
 
 ## Repository
 
@@ -13,6 +16,10 @@ Status: engine (Task 1) built and tested; app (Tauri), Claude plugin and install
 |:--|:--|
 | `engine/` | Python engine with two start types: `engine ui` (sidecar of the app, JSON lines over stdin/stdout) and `engine mcp` (MCP server for Claude, only anonymised and released data) |
 | `contracts/` | JSON Schemas (draft 2020-12) for every exchange between app, engine and Claude |
+| `arbeitsordner/` | Working-folder template for Claude Code: no file, shell or web tools, a PreToolUse hook (`engine hook`) as allowlist, skills `/gutachten` and `/stil-lernen`, reviewer subagents |
+| `plugin/` | Chat plugin with the same skills, packed by `scripts/build_plugin.py` |
+| `scripts/build_engine.py`, `scripts/build_pyinstaller.py` | Engine builds: official embeddable Python plus packages, or PyInstaller |
+| `.github/workflows/engine-windows.yml` | Windows build and smoke test of both engine builds |
 | `docs/ui-api.md` | Contract between app and engine |
 
 Design documents and the project plan are kept outside this repository; references to them in comments

@@ -1,0 +1,6 @@
+{
+  "name": "schlomo-und-adelheid",
+  "version": "0.1.0",
+  "description": "Schulpsychologische Gutachten mit Claude im Chat: Entwurf, Prüfungen und Stilprofil nur aus Fallpaketen der lokalen App, Rückgabe als genau ein JSON-Block. Enthält keine Fall- oder Personendaten.",
+  "license": "Apache-2.0"
+}

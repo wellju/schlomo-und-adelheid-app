@@ -51,5 +51,31 @@
         }
       }
     }
+  },
+  "$defs": {
+    "fuer_claude": {
+      "description": "Freigegebenes Profil für Pakete an Claude: Merkmale und Formulierungsbeispiele ohne Belegzitate, denn die Zitate stammen aus Probegutachten anderer Fälle (Datenminimierung).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "version", "merkmale", "formulierungsbeispiele"],
+      "properties": {
+        "schema_version": { "const": "1" },
+        "version": { "type": "string" },
+        "merkmale": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["merkmal_id", "kategorie", "beschreibung"],
+            "properties": {
+              "merkmal_id": { "type": "string" },
+              "kategorie": { "$ref": "#/properties/merkmale/items/properties/kategorie" },
+              "beschreibung": { "type": "string" }
+            }
+          }
+        },
+        "formulierungsbeispiele": { "$ref": "#/properties/formulierungsbeispiele" }
+      }
+    }
   }
 }

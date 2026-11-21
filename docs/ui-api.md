@@ -88,6 +88,12 @@ rechenstoerung, emotional_soziale_entwicklung; Paket-`art` wie in fallpaket.sche
 | `vorlage_zuordnen` | `vorlage` (vorlage.schema.json mit `datei`) | `vorlage_id` | prüft, dass jede Überschrift und jede Kopf-Beschriftung in der Vorlage vorkommt (`E_ABSCHNITT_FEHLT`, `E_KOPFFELD_FEHLT`); `datei` ohne Pfad und ohne Laufwerk (`E_SCHEMA`, Grund `pfad`); Metadaten atomar |
 | `docx_exportieren` | `session_id`, `ziel_pfad` (.docx) | `entwurf_version` | `E_BLOCKIERT` ohne Regelwerk, wenn eine Regel mit `blockiert_export` nicht `erfuellt` ist (auch `nicht_pruefbar`, etwa D1 ohne Begriffsliste), bei Typ emotional-soziale Entwicklung und bei vorhandener Zieldatei; `E_BELEG` bei fehlenden Belegen, auch in Lückenhinweisen; `E_ABSCHNITT_FEHLT`, wenn ein Entwurfsabschnitt keinen Platz in der Vorlage hat oder ein Vorlagenabschnitt leer bliebe; `vorlage_id` nur `[a-z0-9-]+`; Datei entsteht ganz oder gar nicht. Im Export: Änderungen angenommen, keine Kommentare, keine Änderungsverfolgung, keine angehängte Vorlage, keine Custom-Eigenschaften, kein Vorschaubild, Metadaten leer |
 
+MCP-Weg ohne erneute Erkennung (bewusste Abweichung von Nachtrag 1, Datenschutzgrenzen, EGM Task 2 E04): Die
+Startart `mcp` lädt keine Erkennung (ADR 0001). Was sie an Claude gibt, kam über geprüfte Wege herein: Dokumente
+nur nach `anonymisierung_freigeben`, Freitext nur nach der Freitextprüfung in `eingabe_speichern` und
+`text_aendern`, Entwürfe und Befunde schreibt Claude selbst aus diesen Daten. Die erneute Prüfung vor dem Export
+läuft deshalb nur im Browser-Weg (`erzeuge_paket`).
+
 Noch nicht gebaut (App-only laut docs/listen.md, folgen mit der Oberfläche in Task 4): `katalog_speichern`,
 `stilprofil_freigeben`, `konfiguration_freigeben`, `rollback`. Bis dahin pflegt die Psychologin Konfiguration und
 Stilprofil nicht über die App; die Engine liest nur freigegebene Stände.
