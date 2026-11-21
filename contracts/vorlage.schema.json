@@ -1,0 +1,138 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "vorlage.schema.json",
+  "title": "Gutachtenvorlage (Metadaten)",
+  "description": "Beschreibt eine DOCX-Vorlage der Psychologin. Die Datei selbst liegt nur in der lokalen wissensbasis/vorlagen/, nie im Repo.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "vorlage_id",
+    "version",
+    "gutachtentyp",
+    "abschnitte",
+    "kopffelder",
+    "status"
+  ],
+  "$defs": {
+    "platzhalter": {
+      "enum": [
+        "name_kind",
+        "geburtsdatum",
+        "klasse",
+        "schultyp",
+        "bezirk",
+        "schuladresse",
+        "wohnadresse",
+        "geschaeftszahl",
+        "ort_datum",
+        "signatur"
+      ]
+    },
+    "fuer_claude": {
+      "description": "Vorlage ohne Dateiname, für Pakete an Claude.",
+      "allOf": [
+        {
+          "$ref": "#"
+        },
+        {
+          "not": {
+            "required": [
+              "datei"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "properties": {
+    "schema_version": {
+      "const": "1"
+    },
+    "vorlage_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "version": {
+      "type": "string"
+    },
+    "gutachtentyp": {
+      "enum": [
+        "spf",
+        "lrs",
+        "rechenstoerung",
+        "emotional_soziale_entwicklung"
+      ]
+    },
+    "verfahren": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Testkatalog-IDs, für die die Vorlage gilt."
+    },
+    "datei": {
+      "type": "string",
+      "pattern": "^[^/\\\\]+\\.docx$",
+      "description": "Dateiname in wissensbasis/vorlagen/."
+    },
+    "abschnitte": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "abschnitt_id",
+          "ueberschrift"
+        ],
+        "properties": {
+          "abschnitt_id": {
+            "enum": [
+              "vorstellungsgrund",
+              "schullaufbahn",
+              "vorbefunde",
+              "anamnese",
+              "verhaltensbeobachtung",
+              "testbefunde",
+              "leistungsproben",
+              "diagnose",
+              "empfehlung"
+            ]
+          },
+          "ueberschrift": {
+            "type": "string",
+            "description": "Überschrift wie in der Vorlage, über die die Engine den Abschnitt findet."
+          }
+        }
+      }
+    },
+    "kopffelder": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "platzhalter",
+          "bezeichnung"
+        ],
+        "properties": {
+          "platzhalter": {
+            "$ref": "#/$defs/platzhalter"
+          },
+          "bezeichnung": {
+            "type": "string",
+            "description": "Beschriftung im Kopf der Vorlage."
+          }
+        }
+      }
+    },
+    "status": {
+      "enum": [
+        "entwurf",
+        "freigegeben"
+      ]
+    }
+  }
+}

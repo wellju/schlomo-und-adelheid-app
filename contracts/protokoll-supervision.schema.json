@@ -1,0 +1,216 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "protokoll-supervision.schema.json",
+  "title": "Protokoll Supervision",
+  "description": "Eine erfahrene, klar als KI gekennzeichnete Stimme. Nur anonymisierte Inhalte.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "session_id",
+    "status",
+    "ki_kennzeichnung",
+    "haltung_version",
+    "anliegen"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1"
+    },
+    "session_id": {
+      "type": "string",
+      "pattern": "^s-[0-9a-f]{8}$"
+    },
+    "status": {
+      "enum": [
+        "laufend",
+        "beendet",
+        "abgebrochen"
+      ]
+    },
+    "phase": {
+      "enum": [
+        "anliegen",
+        "klaerung",
+        "bearbeitung",
+        "integration",
+        "abschluss"
+      ],
+      "description": "Phasen wie im Design Screen 08."
+    },
+    "ki_kennzeichnung": {
+      "const": true
+    },
+    "haltung_version": {
+      "type": "string"
+    },
+    "anliegen": {
+      "type": "string"
+    },
+    "ebenen": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "ebene"
+        ],
+        "properties": {
+          "ebene": {
+            "enum": [
+              "fall",
+              "beziehung",
+              "rolle_und_system",
+              "person",
+              "ethik_und_qualitaet"
+            ]
+          },
+          "balint_schwerpunkt": {
+            "type": "string",
+            "description": "Nur bei Ebene beziehung, von der Psychologin gewählt."
+          },
+          "fragen": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "hypothesen": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "widerspruch": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "notizen": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "hypothesenpruefungen": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "vignette",
+          "schlussfolgerung",
+          "befunde"
+        ],
+        "properties": {
+          "vignette": {
+            "type": "string"
+          },
+          "schlussfolgerung": {
+            "type": "string"
+          },
+          "befunde": {
+            "type": "array",
+            "items": {
+              "$ref": "befund.schema.json"
+            }
+          }
+        }
+      }
+    },
+    "goldfisch_befunde": {
+      "type": "array",
+      "items": {
+        "$ref": "befund.schema.json"
+      },
+      "description": "Prüfung auf Gefälligkeit vor dem Abschluss."
+    },
+    "abschluss": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mitnahme"
+      ],
+      "properties": {
+        "mitnahme": {
+          "type": "string"
+        }
+      }
+    },
+    "abbruch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "grund",
+        "hinweis"
+      ],
+      "properties": {
+        "grund": {
+          "enum": [
+            "durch_psychologin"
+          ]
+        },
+        "hinweis": {
+          "type": "string"
+        }
+      }
+    },
+    "hinweise": {
+      "type": "array",
+      "description": "Hinweise der KI ohne Abbruch, z. B. dass eine Gefährdungsmeldung an die MA 11 nötig sein könnte. Die Entscheidung trifft die Psychologin.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "art",
+          "text"
+        ],
+        "properties": {
+          "art": {
+            "enum": [
+              "kindeswohl",
+              "akute_gefaehrdung"
+            ]
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "beendet"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "ebenen",
+          "goldfisch_befunde",
+          "abschluss"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "abgebrochen"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "abbruch"
+        ]
+      }
+    }
+  ]
+}

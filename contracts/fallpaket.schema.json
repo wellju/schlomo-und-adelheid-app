@@ -1,0 +1,400 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "fallpaket.schema.json",
+  "title": "Fallpaket (Austausch App zu Claude, Browser-Variante)",
+  "description": "Von der App nach der Freigabe erzeugt; die Engine lässt die Erkennung vor dem Export erneut laufen. Je Art nur die erlaubten Felder. Nie enthalten: interne Diagnose, diagnosebezogene Regeln (awmf_*), Schweregrad, Dateinamen, Klardaten.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "paket_id",
+    "art",
+    "session_id",
+    "erwartete_rueckgabe",
+    "anonymisierung_geprueft",
+    "inhalt"
+  ],
+  "$defs": {
+    "kurztext": {
+      "type": "string",
+      "maxLength": 20000
+    },
+    "kategorien": {
+      "type": "array",
+      "description": "Von der Engine abgeleitete Kategorien je Wert; Claude übernimmt sie unverändert.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "wert_quelle"
+        ],
+        "properties": {
+          "wert_quelle": {
+            "type": "string",
+            "pattern": "^/"
+          },
+          "kategorie": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "kategorie_luecke": {
+            "type": "string",
+            "maxLength": 500
+          }
+        },
+        "oneOf": [
+          {
+            "required": [
+              "kategorie"
+            ]
+          },
+          {
+            "required": [
+              "kategorie_luecke"
+            ]
+          }
+        ]
+      }
+    },
+    "bausteine": {
+      "type": "array",
+      "description": "Feste Verfahrensbausteine aus dem Testkatalog.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "testkatalog_id",
+          "text",
+          "zitat"
+        ],
+        "properties": {
+          "testkatalog_id": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 20000
+          },
+          "zitat": {
+            "type": "string",
+            "maxLength": 1000
+          }
+        }
+      }
+    }
+  },
+  "properties": {
+    "schema_version": {
+      "const": "2"
+    },
+    "paket_id": {
+      "type": "string",
+      "pattern": "^p-[0-9a-f]{8}$"
+    },
+    "art": {
+      "enum": [
+        "gutachten",
+        "pruefung_stil",
+        "pruefung_goldfisch",
+        "pruefung_elefant",
+        "diagnosevorschlag",
+        "stil_lernen",
+        "hypothese"
+      ]
+    },
+    "session_id": {
+      "type": "string",
+      "pattern": "^s-[0-9a-f]{8}$"
+    },
+    "erwartete_rueckgabe": {
+      "enum": [
+        "gutachten-output",
+        "befunde",
+        "diagnosevorschlag",
+        "stilprofil"
+      ]
+    },
+    "anonymisierung_geprueft": {
+      "const": true,
+      "description": "Die Engine hat die Erkennung unmittelbar vor dem Export ohne Fund durchlaufen."
+    },
+    "konfiguration_version": {
+      "type": "string"
+    },
+    "inhalt": {
+      "type": "object"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "art": {
+            "const": "gutachten"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "erwartete_rueckgabe": {
+            "const": "gutachten-output"
+          },
+          "inhalt": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "gutachten_input",
+              "regelergebnis",
+              "vorlage"
+            ],
+            "properties": {
+              "gutachten_input": {
+                "$ref": "gutachten-input.schema.json"
+              },
+              "regelergebnis": {
+                "$ref": "regelergebnis.schema.json#/$defs/fuer_claude"
+              },
+              "vorlage": {
+                "$ref": "vorlage.schema.json#/$defs/fuer_claude"
+              },
+              "stilprofil": {
+                "$ref": "stilprofil.schema.json"
+              },
+              "kategorien": {
+                "$ref": "#/$defs/kategorien"
+              },
+              "bausteine": {
+                "$ref": "#/$defs/bausteine"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "art": {
+            "const": "pruefung_stil"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "erwartete_rueckgabe": {
+            "const": "befunde"
+          },
+          "inhalt": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "entwurf",
+              "stilprofil"
+            ],
+            "properties": {
+              "entwurf": {
+                "$ref": "gutachten-output.schema.json"
+              },
+              "stilprofil": {
+                "$ref": "stilprofil.schema.json"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "art": {
+            "const": "pruefung_goldfisch"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "erwartete_rueckgabe": {
+            "const": "befunde"
+          },
+          "inhalt": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "fragestellung",
+              "ergebnis_text",
+              "kriterien"
+            ],
+            "properties": {
+              "fragestellung": {
+                "$ref": "#/$defs/kurztext"
+              },
+              "ergebnis_text": {
+                "type": "string",
+                "maxLength": 100000,
+                "description": "Entwurfstext ohne Quellenreferenzen und ohne Eingaben."
+              },
+              "kriterien": {
+                "$ref": "#/$defs/kurztext"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "art": {
+            "const": "pruefung_elefant"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "erwartete_rueckgabe": {
+            "const": "befunde"
+          },
+          "inhalt": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "gutachten_input",
+              "entwurf",
+              "regelergebnis"
+            ],
+            "properties": {
+              "gutachten_input": {
+                "$ref": "gutachten-input.schema.json"
+              },
+              "entwurf": {
+                "$ref": "gutachten-output.schema.json"
+              },
+              "regelergebnis": {
+                "$ref": "regelergebnis.schema.json#/$defs/fuer_claude"
+              },
+              "kategorien": {
+                "$ref": "#/$defs/kategorien"
+              },
+              "bausteine": {
+                "$ref": "#/$defs/bausteine"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "art": {
+            "const": "diagnosevorschlag"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "erwartete_rueckgabe": {
+            "const": "diagnosevorschlag"
+          },
+          "inhalt": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "gutachten_input"
+            ],
+            "description": "Eigenes, neues Gespräch ohne Entwurf; die interne Diagnose ist nie enthalten.",
+            "properties": {
+              "gutachten_input": {
+                "$ref": "gutachten-input.schema.json"
+              },
+              "kategorien": {
+                "$ref": "#/$defs/kategorien"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "art": {
+            "const": "stil_lernen"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "erwartete_rueckgabe": {
+            "const": "stilprofil"
+          },
+          "inhalt": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "probetexte"
+            ],
+            "properties": {
+              "probetexte": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 10,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "probe_id",
+                    "text"
+                  ],
+                  "properties": {
+                    "probe_id": {
+                      "type": "string",
+                      "pattern": "^pg-[0-9a-f]{8}$"
+                    },
+                    "text": {
+                      "type": "string",
+                      "maxLength": 100000,
+                      "description": "Freigegebener, anonymisierter Text eines Probegutachtens."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "art": {
+            "const": "hypothese"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "erwartete_rueckgabe": {
+            "const": "befunde"
+          },
+          "inhalt": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "vignette",
+              "schlussfolgerung"
+            ],
+            "properties": {
+              "vignette": {
+                "$ref": "#/$defs/kurztext"
+              },
+              "schlussfolgerung": {
+                "$ref": "#/$defs/kurztext"
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

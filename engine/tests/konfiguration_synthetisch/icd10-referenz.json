@@ -1,0 +1,16 @@
+{
+  "schema_version": "1",
+  "version": "syn-1",
+  "quelle": "synthetisch fuer Tests",
+  "herkunft": "synthetisch",
+  "codes": [
+    {
+      "code": "F70",
+      "titel": "synthetisch"
+    },
+    {
+      "code": "F71",
+      "titel": "synthetisch"
+    }
+  ]
+}

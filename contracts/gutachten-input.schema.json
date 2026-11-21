@@ -1,0 +1,593 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "gutachten-input.schema.json",
+  "title": "Gutachten-Input (anonymisiert)",
+  "description": "Strukturierte, freigegebene Eingaben, gegliedert nach den Abschnitten der Vorlage (Nachtrag 1). Einzige Quelle für Werte, Testnamen, Diagnosen und Codes. Keine Klardaten, keine absoluten Daten.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "session_id",
+    "gutachtentyp",
+    "verfasserin",
+    "vorstellungsgrund",
+    "schullaufbahn",
+    "vorbefunde",
+    "anamnese",
+    "verhaltensbeobachtung",
+    "testergebnisse",
+    "adaptives_verhalten",
+    "drei_quellen",
+    "erstsprache_deutsch",
+    "alter",
+    "empfehlung"
+  ],
+  "$defs": {
+    "text": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "text"
+      ],
+      "properties": {
+        "text": {
+          "type": "string",
+          "maxLength": 20000
+        },
+        "dok_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^d-[0-9a-f]{8}$"
+          }
+        }
+      }
+    },
+    "alter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "jahre",
+        "monate"
+      ],
+      "properties": {
+        "jahre": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "monate": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 11
+        }
+      }
+    },
+    "skala": {
+      "enum": [
+        "iq",
+        "wertpunkte",
+        "t",
+        "pr"
+      ]
+    },
+    "quellenstatus": {
+      "enum": [
+        "dokumentiert",
+        "fehlt",
+        "nicht_anwendbar"
+      ]
+    },
+    "rolle": {
+      "type": "string",
+      "maxLength": 80,
+      "pattern": "^(der|die|das|ein|eine) ",
+      "description": "Rolle statt Name, beginnt mit Artikel, z. B. die Mutter."
+    }
+  },
+  "properties": {
+    "schema_version": {
+      "const": "3"
+    },
+    "session_id": {
+      "type": "string",
+      "pattern": "^s-[0-9a-f]{8}$"
+    },
+    "gutachtentyp": {
+      "enum": [
+        "spf",
+        "lrs",
+        "rechenstoerung",
+        "emotional_soziale_entwicklung"
+      ],
+      "description": "v1: alle vier Typen (Nachtrag 1)."
+    },
+    "vorlage_id": {
+      "type": "string"
+    },
+    "verfasserin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "qualifikationen"
+      ],
+      "description": "Profil der Verfasserin, keine Namen. Grundlage für Regel Q1.",
+      "properties": {
+        "qualifikationen": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "schulpsychologin",
+              "klinische_psychologin",
+              "gesundheitspsychologin"
+            ]
+          }
+        }
+      }
+    },
+    "vorstellungsgrund": {
+      "$ref": "#/$defs/text"
+    },
+    "schullaufbahn": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schulstufe",
+        "jahr_der_schulpflicht"
+      ],
+      "properties": {
+        "schulstufe": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "0 für Vorschulstufe."
+        },
+        "jahr_der_schulpflicht": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "verlauf": {
+          "type": "string",
+          "maxLength": 4000
+        }
+      }
+    },
+    "vorbefunde": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "quelle_rolle",
+          "text"
+        ],
+        "properties": {
+          "quelle_rolle": {
+            "type": "string",
+            "description": "z. B. ein kinderärztlicher Befund.",
+            "maxLength": 120
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 20000
+          },
+          "dok_refs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^d-[0-9a-f]{8}$"
+            }
+          }
+        }
+      }
+    },
+    "anamnese": {
+      "type": "array",
+      "description": "Anamnese aus mehreren Quellen, je Quelle ein Eintrag.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "quelle_id",
+          "erhoben_mit",
+          "art",
+          "uebersetzungshilfe",
+          "text"
+        ],
+        "properties": {
+          "quelle_id": {
+            "type": "string"
+          },
+          "erhoben_mit": {
+            "$ref": "#/$defs/rolle"
+          },
+          "art": {
+            "enum": [
+              "gespraech",
+              "bericht",
+              "vorbefund",
+              "fragebogen",
+              "sonstiges"
+            ]
+          },
+          "uebersetzungshilfe": {
+            "type": "boolean"
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 20000
+          },
+          "dok_refs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^d-[0-9a-f]{8}$"
+            }
+          }
+        }
+      }
+    },
+    "verhaltensbeobachtung": {
+      "$ref": "#/$defs/text",
+      "description": "Stichwortstil, das LLM formuliert nur."
+    },
+    "testergebnisse": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "testergebnis_id",
+          "verfahren",
+          "testkatalog_id",
+          "einzeltestung",
+          "werte"
+        ],
+        "properties": {
+          "testergebnis_id": {
+            "type": "string"
+          },
+          "verfahren": {
+            "type": "string",
+            "description": "Name wie im Testkatalog."
+          },
+          "testkatalog_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "null, wenn das Verfahren nicht im Katalog steht. Regelergebnis dann nicht prüfbar."
+          },
+          "einzeltestung": {
+            "type": "boolean"
+          },
+          "gesamt_iq": {
+            "type": "number",
+            "description": "Für Intelligenzverfahren; Regel b prüft mit KI-Grenzen und KI-Niveau."
+          },
+          "ki_untergrenze": {
+            "type": "number"
+          },
+          "ki_obergrenze": {
+            "type": "number"
+          },
+          "ki_niveau": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "exclusiveMaximum": 1,
+            "description": "Vorgabe 0.95; ein anderes Niveau ergibt einen Hinweis."
+          },
+          "normgruppe": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "von",
+              "bis",
+              "abgeleitet"
+            ],
+            "description": "Abgeleitet: Normgruppe des Kindes laut Katalog am Testtag (das ist das Normalter).",
+            "properties": {
+              "von": {
+                "$ref": "#/$defs/alter"
+              },
+              "bis": {
+                "$ref": "#/$defs/alter"
+              },
+              "abgeleitet": {
+                "const": true
+              }
+            }
+          },
+          "werte": {
+            "type": "array",
+            "description": "Je Index und Subtest ein Wert. Kennung wie im Testkatalog.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "ebene",
+                "kennung",
+                "wert",
+                "skala"
+              ],
+              "properties": {
+                "ebene": {
+                  "enum": [
+                    "index",
+                    "subtest"
+                  ],
+                  "description": "Gesamtwert nur in gesamt_iq."
+                },
+                "kennung": {
+                  "type": "string"
+                },
+                "wert": {
+                  "type": "number"
+                },
+                "skala": {
+                  "$ref": "#/$defs/skala"
+                }
+              }
+            }
+          },
+          "normen_alter_jahre": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Abgeleitet: Alter der Testnormen am Testtag, transient aus Normjahr und Testdatum (Regel c)."
+          },
+          "normen_begruendung": {
+            "type": "string",
+            "description": "Pflicht im Gutachten, wenn Regel c verletzt ist: Begründung für die Verwendung des Verfahrens.",
+            "maxLength": 4000
+          }
+        },
+        "dependentRequired": {
+          "gesamt_iq": [
+            "ki_untergrenze",
+            "ki_obergrenze",
+            "ki_niveau"
+          ]
+        }
+      }
+    },
+    "leistungsproben": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "deutsch",
+        "mathematik"
+      ],
+      "properties": {
+        "deutsch": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "lesen",
+            "schreiben"
+          ],
+          "properties": {
+            "lesen": {
+              "$ref": "#/$defs/text"
+            },
+            "schreiben": {
+              "$ref": "#/$defs/text"
+            }
+          }
+        },
+        "mathematik": {
+          "$ref": "#/$defs/text"
+        }
+      }
+    },
+    "adaptives_verhalten": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "befragte_rollen",
+        "text"
+      ],
+      "properties": {
+        "verfahren": {
+          "type": "string"
+        },
+        "testkatalog_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "befragte_rollen": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/rolle"
+          }
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 20000
+        },
+        "werte": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "bereich",
+              "wert",
+              "skala"
+            ],
+            "properties": {
+              "bereich": {
+                "type": "string"
+              },
+              "wert": {
+                "type": "number"
+              },
+              "skala": {
+                "$ref": "#/$defs/skala"
+              }
+            }
+          }
+        }
+      }
+    },
+    "drei_quellen": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "klinischer_eindruck",
+        "intelligenztest",
+        "befragung_adaptives_verhalten"
+      ],
+      "properties": {
+        "klinischer_eindruck": {
+          "$ref": "#/$defs/quellenstatus"
+        },
+        "intelligenztest": {
+          "$ref": "#/$defs/quellenstatus"
+        },
+        "befragung_adaptives_verhalten": {
+          "$ref": "#/$defs/quellenstatus"
+        }
+      }
+    },
+    "erstsprache_deutsch": {
+      "type": "boolean",
+      "description": "Auslöser für den DaZ-Prüfpunkt des Elefanten."
+    },
+    "schulbesuch_oesterreich_monate": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Abgeleitet, transient aus Datumsangaben berechnet; die Daten werden verworfen."
+    },
+    "alter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "jahre",
+        "monate",
+        "abgeleitet"
+      ],
+      "description": "Alter am Testtag in J;M. Geburts- und Testdatum werden nicht gespeichert.",
+      "properties": {
+        "jahre": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "monate": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 11
+        },
+        "abgeleitet": {
+          "const": true
+        }
+      }
+    },
+    "foerderung_und_umfeld": {
+      "$ref": "#/$defs/text",
+      "description": "Personen- und umweltbezogene Faktoren, bisherige Förderung (Regel S3)."
+    },
+    "empfehlung": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "text"
+      ],
+      "properties": {
+        "text": {
+          "type": "string",
+          "maxLength": 20000
+        },
+        "staerken": {
+          "type": "string",
+          "maxLength": 20000
+        },
+        "foerdermassnahmen": {
+          "type": "string",
+          "maxLength": 20000
+        },
+        "spf_empfohlen": {
+          "type": "boolean",
+          "description": "SPF wird empfohlen, nie festgestellt."
+        }
+      }
+    },
+    "gutachten_diagnose": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "text"
+      ],
+      "description": "Diagnose, die im Gutachten steht. Nur bei lrs und rechenstoerung und nur mit Q1. Die interne Diagnose bei spf steht nie hier, sondern nur im Fallspeicher (fallspeicher.schema.json).",
+      "properties": {
+        "text": {
+          "type": "string",
+          "maxLength": 2000
+        },
+        "icd10_code": {
+          "type": "string",
+          "pattern": "^[A-Z][0-9]{2}(\\.[0-9]{1,2})?$",
+          "description": "Nur aus icd10-referenz."
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "gutachtentyp": {
+            "const": "spf"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "leistungsproben",
+          "foerderung_und_umfeld"
+        ],
+        "not": {
+          "required": [
+            "gutachten_diagnose"
+          ]
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "gutachten_diagnose"
+        ]
+      },
+      "then": {
+        "properties": {
+          "verfasserin": {
+            "properties": {
+              "qualifikationen": {
+                "contains": {
+                  "const": "klinische_psychologin"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "gutachtentyp": {
+            "const": "emotional_soziale_entwicklung"
+          }
+        }
+      },
+      "then": {
+        "not": {
+          "required": [
+            "gutachten_diagnose"
+          ]
+        }
+      }
+    }
+  ]
+}

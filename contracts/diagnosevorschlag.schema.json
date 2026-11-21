@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "diagnosevorschlag.schema.json",
+  "title": "Diagnosevorschlag zum Vergleich",
+  "description": "Vorschlag der Engine oder von Claude, nur zum blinden Vergleich mit der internen Diagnose der Psychologin. Nie im Gutachten, nie Fachregel, nie Lernsignal. Die interne Diagnose selbst steht nur im lokalen Fallspeicher.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "session_id",
+    "quelle",
+    "kriterien",
+    "begruendung",
+    "hinweis"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1"
+    },
+    "session_id": {
+      "type": "string",
+      "pattern": "^s-[0-9a-f]{8}$"
+    },
+    "quelle": {
+      "enum": [
+        "engine",
+        "claude"
+      ]
+    },
+    "kriterien": {
+      "enum": [
+        "erfuellt",
+        "nicht_erfuellt",
+        "nicht_pruefbar"
+      ],
+      "description": "Bei quelle engine aus dem Regelergebnis a bis f."
+    },
+    "icd10_code": {
+      "type": "string",
+      "description": "Nur Codes aus den lokalen Referenzdaten ICD-10 BMASGPK 2026; sonst weglassen und im Hinweis nennen.",
+      "pattern": "^[A-Z][0-9]{2}(\\.[0-9]{1,2})?$"
+    },
+    "schweregrad_vorschlag": {
+      "enum": [
+        "leicht",
+        "mittelgradig",
+        "schwer",
+        "schwerst",
+        "kein_vorschlag"
+      ]
+    },
+    "begruendung": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "text",
+          "quellen"
+        ],
+        "properties": {
+          "text": {
+            "type": "string",
+            "minLength": 1
+          },
+          "quellen": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "pattern": "^/"
+            }
+          }
+        }
+      }
+    },
+    "hinweis": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Pflicht: Vorschlag, keine Diagnose; Schweregrad grob orientierend, unter IQ 50 oft nicht zuverlässig."
+    },
+    "regelergebnis_version": {
+      "type": "string"
+    }
+  },
+  "if": {
+    "properties": {
+      "quelle": {
+        "const": "engine"
+      }
+    }
+  },
+  "then": {
+    "required": [
+      "regelergebnis_version"
+    ]
+  }
+}

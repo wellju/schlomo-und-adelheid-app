@@ -1,0 +1,318 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "testkatalog.schema.json",
+  "title": "Testkatalog",
+  "description": "Testmetadaten. Befüllt ausschließlich die Psychologin aus den Manualen und ihren Vorlagen. Leere Struktur, kein Agent ergänzt Werte.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "version",
+    "eintraege"
+  ],
+  "$defs": {
+    "alter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "jahre",
+        "monate"
+      ],
+      "properties": {
+        "jahre": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "monate": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 11
+        }
+      }
+    },
+    "quelle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "manual",
+        "seite"
+      ],
+      "properties": {
+        "manual": {
+          "type": "string"
+        },
+        "seite": {
+          "type": "string"
+        }
+      }
+    },
+    "kennwert": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "wert",
+        "quelle"
+      ],
+      "properties": {
+        "wert": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "art": {
+          "type": "string"
+        },
+        "quelle": {
+          "$ref": "#/$defs/quelle"
+        }
+      }
+    },
+    "skala": {
+      "enum": [
+        "iq",
+        "wertpunkte",
+        "t",
+        "pr"
+      ]
+    }
+  },
+  "properties": {
+    "schema_version": {
+      "const": "3"
+    },
+    "version": {
+      "type": "string"
+    },
+    "eintraege": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "name",
+          "art",
+          "altersbereich",
+          "normart",
+          "normjahr",
+          "einzeltestung",
+          "mehrdimensional",
+          "indizes",
+          "beschreibungsbaustein",
+          "quelle",
+          "status",
+          "befuellt_von"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]+$"
+          },
+          "name": {
+            "type": "string"
+          },
+          "verfahrensversion": {
+            "type": "string"
+          },
+          "art": {
+            "enum": [
+              "intelligenztest",
+              "adaptives_verhalten",
+              "leistungstest",
+              "sprachstand",
+              "sonstiges"
+            ]
+          },
+          "altersbereich": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "von",
+              "bis"
+            ],
+            "properties": {
+              "von": {
+                "$ref": "#/$defs/alter"
+              },
+              "bis": {
+                "$ref": "#/$defs/alter"
+              }
+            }
+          },
+          "normart": {
+            "enum": [
+              "alter",
+              "klasse"
+            ]
+          },
+          "normjahr": {
+            "type": "integer",
+            "description": "Jahr der Normierung laut Manual, nicht das Erscheinungsjahr."
+          },
+          "normgruppen": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "von",
+                "bis"
+              ],
+              "properties": {
+                "von": {
+                  "$ref": "#/$defs/alter"
+                },
+                "bis": {
+                  "$ref": "#/$defs/alter"
+                }
+              }
+            }
+          },
+          "konfidenzniveaus": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "exclusiveMaximum": 1
+            }
+          },
+          "innere_konsistenz": {
+            "$ref": "#/$defs/kennwert"
+          },
+          "retest": {
+            "$ref": "#/$defs/kennwert"
+          },
+          "messbereich": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "iq_min",
+              "iq_max",
+              "quelle"
+            ],
+            "properties": {
+              "iq_min": {
+                "type": "number"
+              },
+              "iq_max": {
+                "type": "number"
+              },
+              "quelle": {
+                "$ref": "#/$defs/quelle"
+              }
+            }
+          },
+          "einzeltestung": {
+            "type": "boolean"
+          },
+          "mehrdimensional": {
+            "type": "boolean"
+          },
+          "indizes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kennung",
+                "bezeichnung",
+                "skala",
+                "subtests"
+              ],
+              "properties": {
+                "kennung": {
+                  "type": "string"
+                },
+                "bezeichnung": {
+                  "type": "string"
+                },
+                "skala": {
+                  "$ref": "#/$defs/skala"
+                },
+                "inhalte_text": {
+                  "type": "string"
+                },
+                "subtests": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "kennung",
+                      "bezeichnung",
+                      "skala",
+                      "inhalte_text"
+                    ],
+                    "properties": {
+                      "kennung": {
+                        "type": "string"
+                      },
+                      "bezeichnung": {
+                        "type": "string"
+                      },
+                      "skala": {
+                        "$ref": "#/$defs/skala"
+                      },
+                      "inhalte_text": {
+                        "type": "string",
+                        "description": "Spalte Inhalte der Ergebnistabelle."
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "beschreibungsbaustein": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "text",
+              "zitat"
+            ],
+            "description": "Fester Text aus der Vorlage, wird nie vom LLM verändert. Für Lernvorschläge gesperrt.",
+            "properties": {
+              "text": {
+                "type": "string"
+              },
+              "zitat": {
+                "type": "string",
+                "description": "Literaturangabe wie in der Vorlage."
+              }
+            }
+          },
+          "quelle": {
+            "$ref": "#/$defs/quelle"
+          },
+          "status": {
+            "enum": [
+              "entwurf",
+              "freigegeben"
+            ]
+          },
+          "befuellt_von": {
+            "const": "psychologin"
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "art": {
+                  "const": "intelligenztest"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "konfidenzniveaus",
+                "messbereich"
+              ]
+            }
+          }
+        ],
+        "description": "Fehlt ein Kennwert, bleibt das Feld leer und die zugehörige Regel ergibt nicht prüfbar."
+      }
+    }
+  }
+}

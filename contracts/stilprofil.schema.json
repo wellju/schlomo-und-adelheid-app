@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "stilprofil.schema.json",
+  "title": "Stilprofil",
+  "description": "Erzeugt von /stil-lernen aus lokal anonymisierten Probegutachten. /gutachten nutzt nur Status freigegeben.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "version", "status", "anzahl_probegutachten", "merkmale", "formulierungsbeispiele"],
+  "properties": {
+    "schema_version": { "const": "1" },
+    "version": { "type": "string" },
+    "vorgaenger_version": { "type": ["string", "null"] },
+    "status": { "enum": ["entwurf", "freigegeben", "ersetzt"] },
+    "anzahl_probegutachten": { "type": "integer", "minimum": 1 },
+    "merkmale": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["merkmal_id", "kategorie", "beschreibung", "belegzitate"],
+        "properties": {
+          "merkmal_id": { "type": "string" },
+          "kategorie": { "enum": ["satzbau", "wortwahl", "struktur", "perspektive", "fachsprache", "zurueckhaltung", "sonstiges"] },
+          "beschreibung": { "type": "string" },
+          "belegzitate": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["text", "probe_id"],
+              "properties": {
+                "text": { "type": "string", "maxLength": 300 },
+                "probe_id": { "type": "string", "description": "Neutrale Kennung des anonymisierten Probegutachtens." }
+              }
+            }
+          }
+        }
+      }
+    },
+    "formulierungsbeispiele": {
+      "type": "array",
+      "description": "Kurze Beispiele, nie ganze Probegutachten.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["abschnitt_id", "text"],
+        "properties": {
+          "abschnitt_id": { "type": "string" },
+          "text": { "type": "string", "maxLength": 400 }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "befund.schema.json",
+  "title": "Prüfbefund",
+  "description": "Ein Befund eines Prüfers. Prüfer schreiben nie selbst um; die Psychologin nimmt an oder verwirft.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "befund_id",
+    "stelle",
+    "problem",
+    "schwere",
+    "begruendung",
+    "pruefer",
+    "entscheidung"
+  ],
+  "properties": {
+    "befund_id": {
+      "type": "string",
+      "pattern": "^bf-[0-9a-f]{8}$"
+    },
+    "stelle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "abschnitt_id": {
+          "type": "string"
+        },
+        "absatz_id": {
+          "type": "string"
+        },
+        "zitat": {
+          "type": "string",
+          "maxLength": 300
+        },
+        "protokoll_phase": {
+          "type": "string",
+          "description": "Phase oder Ebene im Intervisions- oder Supervisionsprotokoll."
+        }
+      },
+      "minProperties": 1
+    },
+    "problem": {
+      "type": "string",
+      "minLength": 1
+    },
+    "schwere": {
+      "enum": [
+        "hoch",
+        "mittel",
+        "gering"
+      ],
+      "description": "Stufen wie im Design: Hoch, Mittel, Gering."
+    },
+    "begruendung": {
+      "type": "string",
+      "minLength": 1
+    },
+    "pruefer": {
+      "enum": [
+        "elefant",
+        "goldfisch",
+        "stil"
+      ]
+    },
+    "regel_id": {
+      "type": "string",
+      "description": "Nur Elefant: Regel aus dem Regelwerk, deren Ergebnis übernommen wurde."
+    },
+    "entscheidung": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "offen",
+            "angenommen",
+            "verworfen"
+          ]
+        },
+        "kommentar": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "fallspeicher.schema.json",
+  "title": "Fallspeicher-Datensatz (lokal)",
+  "description": "Ein Fall im lokalen Fallspeicher außerhalb des Arbeitsordners. Lesen und Schreiben von interne_diagnose und vergleich nur durch die Startart ui; die Startart mcp und jedes Fallpaket sehen diese Felder nie.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "session"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1"
+    },
+    "session": {
+      "$ref": "session.schema.json"
+    },
+    "gutachten_input": {
+      "$ref": "gutachten-input.schema.json"
+    },
+    "entwuerfe": {
+      "type": "array",
+      "items": {
+        "$ref": "gutachten-output.schema.json"
+      }
+    },
+    "befunde": {
+      "type": "array",
+      "items": {
+        "$ref": "befund.schema.json"
+      }
+    },
+    "interne_diagnose": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "text",
+        "erfasst_vor_vorschlaegen"
+      ],
+      "description": "Nur lokal, nur Startart ui, nur mit Q1. Gesundheitsdatum nach Art. 9 DSGVO.",
+      "properties": {
+        "text": {
+          "type": "string",
+          "maxLength": 2000
+        },
+        "icd10_code": {
+          "type": "string",
+          "pattern": "^[A-Z][0-9]{2}(\\.[0-9]{1,2})?$"
+        },
+        "schweregrad": {
+          "enum": [
+            "leicht",
+            "mittelgradig",
+            "schwer",
+            "schwerst",
+            "keiner"
+          ]
+        },
+        "erfasst_vor_vorschlaegen": {
+          "const": true,
+          "description": "Blinder Vergleich: vor dem Anzeigen der Vorschläge erfasst."
+        }
+      }
+    },
+    "diagnosevorschlaege": {
+      "type": "array",
+      "items": {
+        "$ref": "diagnosevorschlag.schema.json"
+      }
+    },
+    "vergleich": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "engine",
+        "claude"
+      ],
+      "properties": {
+        "engine": {
+          "enum": [
+            "gleich",
+            "abweichend",
+            "nicht_vergleichbar"
+          ]
+        },
+        "claude": {
+          "enum": [
+            "gleich",
+            "abweichend",
+            "nicht_vergleichbar"
+          ]
+        },
+        "notiz": {
+          "type": "string",
+          "maxLength": 2000
+        }
+      }
+    },
+    "lernsignale": {
+      "type": "array",
+      "items": {
+        "$ref": "lernsignal.schema.json"
+      }
+    },
+    "protokolle": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "$ref": "protokoll-intervision.schema.json"
+          },
+          {
+            "$ref": "protokoll-supervision.schema.json"
+          }
+        ]
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "required": [
+          "vergleich"
+        ]
+      },
+      "then": {
+        "required": [
+          "interne_diagnose",
+          "diagnosevorschlaege"
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "schema_version": "2",
+  "version": "syn-1",
+  "eintraege": [
+    {
+      "skala": "iq",
+      "von": 40,
+      "bis": 69,
+      "bezeichnung": "Kategorie A",
+      "quelle": "synthetisch fuer Tests",
+      "status": "entwurf",
+      "herkunft": "synthetisch"
+    },
+    {
+      "skala": "iq",
+      "von": 70,
+      "bis": 84,
+      "bezeichnung": "Kategorie B",
+      "quelle": "synthetisch fuer Tests",
+      "status": "entwurf",
+      "herkunft": "synthetisch"
+    },
+    {
+      "skala": "iq",
+      "von": 85,
+      "bis": 160,
+      "bezeichnung": "Kategorie C",
+      "quelle": "synthetisch fuer Tests",
+      "status": "entwurf",
+      "herkunft": "synthetisch"
+    },
+    {
+      "skala": "t",
+      "von": 20,
+      "bis": 39,
+      "bezeichnung": "Kategorie T-niedrig",
+      "quelle": "synthetisch fuer Tests",
+      "status": "entwurf",
+      "herkunft": "synthetisch"
+    },
+    {
+      "skala": "t",
+      "von": 40,
+      "bis": 80,
+      "bezeichnung": "Kategorie T-mittel",
+      "quelle": "synthetisch fuer Tests",
+      "status": "entwurf",
+      "herkunft": "synthetisch"
+    },
+    {
+      "skala": "iq",
+      "von": 40,
+      "bis": 59,
+      "bezeichnung": "Kategorie A-spezifisch",
+      "quelle": "synthetisch fuer Tests",
+      "status": "entwurf",
+      "herkunft": "synthetisch",
+      "verfahren": [
+        "iq-test-a"
+      ]
+    },
+    {
+      "skala": "iq",
+      "von": 60,
+      "bis": 160,
+      "bezeichnung": "Kategorie C-spezifisch",
+      "quelle": "synthetisch fuer Tests",
+      "status": "entwurf",
+      "herkunft": "synthetisch",
+      "verfahren": [
+        "iq-test-a"
+      ]
+    }
+  ]
+}

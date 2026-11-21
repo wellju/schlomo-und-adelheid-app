@@ -1,0 +1,172 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "rueckgabe.schema.json",
+  "title": "Rückgabe (Austausch Claude zu App, Browser-Variante)",
+  "description": "Von Claude als JSON-Block ausgegeben, von der App eingelesen. Die App nimmt nur Rückgaben zu eigenen paket_id an und prüft danach Belege und Regelergebnis. Claude gibt je Paket genau einen Block aus; die App vergibt IDs neu, Entscheidungen und Freigaben trifft nur die Psychologin in der App.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "paket_id",
+    "typ",
+    "daten"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "2"
+    },
+    "paket_id": {
+      "type": "string",
+      "pattern": "^p-[0-9a-f]{8}$"
+    },
+    "typ": {
+      "enum": [
+        "gutachten-output",
+        "befunde",
+        "diagnosevorschlag",
+        "stilprofil",
+        "protokoll-intervision",
+        "protokoll-supervision"
+      ]
+    },
+    "daten": {}
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "typ": {
+            "const": "gutachten-output"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "daten": {
+            "$ref": "gutachten-output.schema.json"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "typ": {
+            "const": "befunde"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "daten": {
+            "type": "array",
+            "items": {
+              "allOf": [
+                {
+                  "$ref": "befund.schema.json"
+                },
+                {
+                  "properties": {
+                    "entscheidung": {
+                      "properties": {
+                        "status": {
+                          "const": "offen"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "typ": {
+            "const": "diagnosevorschlag"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "daten": {
+            "allOf": [
+              {
+                "$ref": "diagnosevorschlag.schema.json"
+              },
+              {
+                "properties": {
+                  "quelle": {
+                    "const": "claude"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "typ": {
+            "const": "stilprofil"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "daten": {
+            "allOf": [
+              {
+                "$ref": "stilprofil.schema.json"
+              },
+              {
+                "properties": {
+                  "status": {
+                    "const": "entwurf"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "typ": {
+            "const": "protokoll-intervision"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "daten": {
+            "$ref": "protokoll-intervision.schema.json"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "typ": {
+            "const": "protokoll-supervision"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "daten": {
+            "$ref": "protokoll-supervision.schema.json"
+          }
+        }
+      }
+    }
+  ]
+}

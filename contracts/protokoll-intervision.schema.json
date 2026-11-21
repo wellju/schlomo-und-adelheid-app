@@ -1,0 +1,288 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "protokoll-intervision.schema.json",
+  "title": "Protokoll Intervision nach Tietze",
+  "description": "Sechs Phasen als explizite Zustände. Nur anonymisierte Inhalte.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "session_id",
+    "phase",
+    "rollen"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1"
+    },
+    "session_id": {
+      "type": "string",
+      "pattern": "^s-[0-9a-f]{8}$"
+    },
+    "phase": {
+      "enum": [
+        "rollen",
+        "spontanerzaehlung",
+        "schluesselfrage",
+        "methodenwahl",
+        "beratung",
+        "abschluss",
+        "beendet",
+        "abgebrochen"
+      ]
+    },
+    "rollen": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fallerzaehlerin",
+        "moderation",
+        "berater"
+      ],
+      "properties": {
+        "fallerzaehlerin": {
+          "const": "psychologin"
+        },
+        "moderation": {
+          "const": "ki"
+        },
+        "berater": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "berater_id",
+              "perspektive"
+            ],
+            "properties": {
+              "berater_id": {
+                "type": "string"
+              },
+              "perspektive": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "spontanerzaehlung": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "zusammenfassung": {
+          "type": "string"
+        },
+        "verstaendnisfragen": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "schluesselfrage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "endgueltig",
+        "bestaetigt"
+      ],
+      "properties": {
+        "vorschlaege": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "endgueltig": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Formulierung durch die Psychologin."
+        },
+        "bestaetigt": {
+          "const": true
+        }
+      }
+    },
+    "methode": {
+      "enum": [
+        "brainstorming",
+        "kopfstand_brainstorming",
+        "resonanzrunde",
+        "erfolgsmeldung",
+        "perspektivwechsel"
+      ]
+    },
+    "beratung": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "runde",
+          "berater_id",
+          "beitrag"
+        ],
+        "properties": {
+          "runde": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "berater_id": {
+            "type": "string"
+          },
+          "bezug_auf": {
+            "type": "string",
+            "description": "berater_id, auf deren Beitrag reagiert wird."
+          },
+          "beitrag": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "hypothesenpruefungen": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "vignette",
+          "schlussfolgerung",
+          "befunde"
+        ],
+        "properties": {
+          "vignette": {
+            "type": "string"
+          },
+          "schlussfolgerung": {
+            "type": "string"
+          },
+          "befunde": {
+            "type": "array",
+            "items": {
+              "$ref": "befund.schema.json"
+            }
+          }
+        }
+      }
+    },
+    "pruefbefunde": {
+      "type": "array",
+      "items": {
+        "$ref": "befund.schema.json"
+      },
+      "description": "Elefant und Goldfisch vor dem Abschluss."
+    },
+    "abschluss": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mitnahme"
+      ],
+      "properties": {
+        "mitnahme": {
+          "type": "string",
+          "description": "In Worten der Psychologin."
+        }
+      }
+    },
+    "abbruch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "grund",
+        "hinweis"
+      ],
+      "properties": {
+        "grund": {
+          "enum": [
+            "durch_psychologin"
+          ]
+        },
+        "hinweis": {
+          "type": "string"
+        }
+      }
+    },
+    "hinweise": {
+      "type": "array",
+      "description": "Hinweise der KI ohne Abbruch, z. B. dass eine Gefährdungsmeldung an die MA 11 nötig sein könnte. Die Entscheidung trifft die Psychologin.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "art",
+          "text"
+        ],
+        "properties": {
+          "art": {
+            "enum": [
+              "kindeswohl",
+              "akute_gefaehrdung"
+            ]
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "phase": {
+            "enum": [
+              "methodenwahl",
+              "beratung",
+              "abschluss",
+              "beendet"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "schluesselfrage"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "phase": {
+            "const": "beendet"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "methode",
+          "beratung",
+          "pruefbefunde",
+          "abschluss"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "phase": {
+            "const": "abgebrochen"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "abbruch"
+        ]
+      }
+    }
+  ]
+}

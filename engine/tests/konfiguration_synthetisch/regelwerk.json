@@ -1,0 +1,229 @@
+{
+  "schema_version": "1",
+  "version": "syn-1",
+  "regeln": [
+    {
+      "regel_id": "awmf_a",
+      "version": "1",
+      "gutachtentyp": [
+        "spf"
+      ],
+      "titel": "awmf_a",
+      "beschreibung": "synthetisch",
+      "quelle": {
+        "dokument": "synthetisch fuer Tests (Schwellen aus docs/projektrahmen.md, nicht freigegeben)",
+        "fassung": "1"
+      },
+      "status": "entwurf",
+      "parameter": {}
+    },
+    {
+      "regel_id": "awmf_b",
+      "version": "1",
+      "gutachtentyp": [
+        "spf"
+      ],
+      "titel": "awmf_b",
+      "beschreibung": "synthetisch",
+      "quelle": {
+        "dokument": "synthetisch fuer Tests (Schwellen aus docs/projektrahmen.md, nicht freigegeben)",
+        "fassung": "1"
+      },
+      "status": "entwurf",
+      "parameter": {
+        "ki_obergrenze_max": 69
+      }
+    },
+    {
+      "regel_id": "awmf_d",
+      "version": "1",
+      "gutachtentyp": [
+        "spf"
+      ],
+      "titel": "awmf_d",
+      "beschreibung": "synthetisch",
+      "quelle": {
+        "dokument": "synthetisch fuer Tests (Schwellen aus docs/projektrahmen.md, nicht freigegeben)",
+        "fassung": "1"
+      },
+      "status": "entwurf",
+      "parameter": {
+        "innere_konsistenz_min": 0.9,
+        "retest_min": 0.8
+      }
+    },
+    {
+      "regel_id": "awmf_e",
+      "version": "1",
+      "gutachtentyp": [
+        "spf"
+      ],
+      "titel": "awmf_e",
+      "beschreibung": "synthetisch",
+      "quelle": {
+        "dokument": "synthetisch fuer Tests (Schwellen aus docs/projektrahmen.md, nicht freigegeben)",
+        "fassung": "1"
+      },
+      "status": "entwurf",
+      "parameter": {
+        "iq_min_unter": 60
+      }
+    },
+    {
+      "regel_id": "awmf_f",
+      "version": "1",
+      "gutachtentyp": [
+        "spf"
+      ],
+      "titel": "awmf_f",
+      "beschreibung": "synthetisch",
+      "quelle": {
+        "dokument": "synthetisch fuer Tests (Schwellen aus docs/projektrahmen.md, nicht freigegeben)",
+        "fassung": "1"
+      },
+      "status": "entwurf",
+      "parameter": {
+        "hinweis": "[synthetisch] Schweregrad nur als grober Vorschlag.",
+        "stufen": [
+          {
+            "stufe": "leicht",
+            "von": 50,
+            "bis": 69,
+            "icd10": "F70"
+          },
+          {
+            "stufe": "mittelgradig",
+            "von": 35,
+            "bis": 49,
+            "icd10": "F71"
+          },
+          {
+            "stufe": "schwer",
+            "von": 20,
+            "bis": 34,
+            "icd10": "F72"
+          }
+        ]
+      }
+    },
+    {
+      "regel_id": "normen_alter",
+      "version": "1",
+      "gutachtentyp": [
+        "spf",
+        "lrs",
+        "rechenstoerung"
+      ],
+      "titel": "normen_alter",
+      "beschreibung": "synthetisch",
+      "quelle": {
+        "dokument": "synthetisch fuer Tests (Schwellen aus docs/projektrahmen.md, nicht freigegeben)",
+        "fassung": "1"
+      },
+      "status": "entwurf",
+      "parameter": {
+        "max_jahre": 10
+      }
+    },
+    {
+      "regel_id": "konfidenz_95",
+      "version": "1",
+      "gutachtentyp": [
+        "spf",
+        "lrs",
+        "rechenstoerung"
+      ],
+      "titel": "konfidenz_95",
+      "beschreibung": "synthetisch",
+      "quelle": {
+        "dokument": "synthetisch fuer Tests (Schwellen aus docs/projektrahmen.md, nicht freigegeben)",
+        "fassung": "1"
+      },
+      "status": "entwurf",
+      "parameter": {
+        "niveau": 0.95
+      }
+    },
+    {
+      "regel_id": "spf_s1",
+      "version": "1",
+      "gutachtentyp": [
+        "spf"
+      ],
+      "titel": "spf_s1",
+      "beschreibung": "synthetisch",
+      "quelle": {
+        "dokument": "synthetisch fuer Tests (Schwellen aus docs/projektrahmen.md, nicht freigegeben)",
+        "fassung": "1"
+      },
+      "status": "entwurf",
+      "parameter": {}
+    },
+    {
+      "regel_id": "spf_s2",
+      "version": "1",
+      "gutachtentyp": [
+        "spf"
+      ],
+      "titel": "spf_s2",
+      "beschreibung": "synthetisch",
+      "quelle": {
+        "dokument": "synthetisch fuer Tests (Schwellen aus docs/projektrahmen.md, nicht freigegeben)",
+        "fassung": "1"
+      },
+      "status": "entwurf",
+      "parameter": {}
+    },
+    {
+      "regel_id": "spf_s3",
+      "version": "1",
+      "gutachtentyp": [
+        "spf"
+      ],
+      "titel": "spf_s3",
+      "beschreibung": "synthetisch",
+      "quelle": {
+        "dokument": "synthetisch fuer Tests (Schwellen aus docs/projektrahmen.md, nicht freigegeben)",
+        "fassung": "1"
+      },
+      "status": "entwurf",
+      "parameter": {}
+    },
+    {
+      "regel_id": "q1",
+      "version": "1",
+      "gutachtentyp": [
+        "spf",
+        "lrs",
+        "rechenstoerung"
+      ],
+      "titel": "q1",
+      "beschreibung": "synthetisch",
+      "quelle": {
+        "dokument": "synthetisch fuer Tests (Schwellen aus docs/projektrahmen.md, nicht freigegeben)",
+        "fassung": "1"
+      },
+      "status": "entwurf",
+      "parameter": {}
+    },
+    {
+      "regel_id": "d1",
+      "version": "1",
+      "gutachtentyp": [
+        "spf"
+      ],
+      "titel": "d1",
+      "beschreibung": "synthetisch",
+      "quelle": {
+        "dokument": "synthetisch fuer Tests (Schwellen aus docs/projektrahmen.md, nicht freigegeben)",
+        "fassung": "1"
+      },
+      "status": "entwurf",
+      "parameter": {
+        "begriffe": [
+          "Intelligenzminderung"
+        ]
+      }
+    }
+  ]
+}

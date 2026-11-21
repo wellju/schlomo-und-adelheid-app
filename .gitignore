@@ -1,0 +1,25 @@
+# Secrets
+.env
+.env.*
+
+# Never commit real case or personal data
+falldaten/
+fallspeicher/
+Context/
+wissensbasis/vorlagen/
+*.dotx
+
+# Build and tooling
+.venv/
+build/
+dist/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+
+# OS and editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

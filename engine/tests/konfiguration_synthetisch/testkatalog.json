@@ -1,0 +1,128 @@
+{
+  "schema_version": "3",
+  "version": "syn-1",
+  "eintraege": [
+    {
+      "id": "iq-test-a",
+      "name": "Synthetischer Intelligenztest A",
+      "art": "intelligenztest",
+      "altersbereich": {
+        "von": {
+          "jahre": 6,
+          "monate": 0
+        },
+        "bis": {
+          "jahre": 16,
+          "monate": 11
+        }
+      },
+      "normart": "alter",
+      "normjahr": 2014,
+      "normgruppen": [
+        {
+          "von": {
+            "jahre": 8,
+            "monate": 0
+          },
+          "bis": {
+            "jahre": 8,
+            "monate": 5
+          }
+        },
+        {
+          "von": {
+            "jahre": 8,
+            "monate": 6
+          },
+          "bis": {
+            "jahre": 8,
+            "monate": 11
+          }
+        }
+      ],
+      "konfidenzniveaus": [
+        0.9,
+        0.95
+      ],
+      "innere_konsistenz": {
+        "wert": 0.95,
+        "quelle": {
+          "manual": "synthetisch",
+          "seite": "1"
+        }
+      },
+      "retest": {
+        "wert": 0.85,
+        "quelle": {
+          "manual": "synthetisch",
+          "seite": "1"
+        }
+      },
+      "messbereich": {
+        "iq_min": 40,
+        "iq_max": 160,
+        "quelle": {
+          "manual": "synthetisch",
+          "seite": "1"
+        }
+      },
+      "einzeltestung": true,
+      "mehrdimensional": true,
+      "indizes": [
+        {
+          "kennung": "I1",
+          "bezeichnung": "Index 1",
+          "skala": "iq",
+          "subtests": [
+            {
+              "kennung": "U1",
+              "bezeichnung": "Untertest 1",
+              "skala": "wertpunkte",
+              "inhalte_text": "synthetisch"
+            }
+          ]
+        }
+      ],
+      "beschreibungsbaustein": {
+        "text": "[synthetisch] Baustein A",
+        "zitat": "Synthetisch (2014)"
+      },
+      "quelle": {
+        "manual": "synthetisch",
+        "seite": "1"
+      },
+      "status": "entwurf",
+      "befuellt_von": "psychologin"
+    },
+    {
+      "id": "lesetest-a",
+      "name": "Synthetischer Lesetest",
+      "art": "leistungstest",
+      "altersbereich": {
+        "von": {
+          "jahre": 6,
+          "monate": 0
+        },
+        "bis": {
+          "jahre": 10,
+          "monate": 11
+        }
+      },
+      "normart": "klasse",
+      "normjahr": 2010,
+      "einzeltestung": true,
+      "mehrdimensional": false,
+      "indizes": [],
+      "beschreibungsbaustein": {
+        "text": "[synthetisch] Baustein L",
+        "zitat": "Synthetisch (2010)"
+      },
+      "quelle": {
+        "manual": "synthetisch",
+        "seite": "1"
+      },
+      "status": "entwurf",
+      "befuellt_von": "psychologin"
+    }
+  ]
+}

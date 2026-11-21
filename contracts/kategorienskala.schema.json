@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "kategorienskala.schema.json",
+  "title": "Kategorienskala",
+  "description": "Wertebereiche je Skala und ihre verbale Bezeichnung. Grenzen trägt ausschließlich die Psychologin ein, mit Quelle. Für Lernvorschläge gesperrt. Überlappungen und Lücken prüft die Engine beim Speichern.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "version",
+    "eintraege"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "2"
+    },
+    "version": {
+      "type": "string"
+    },
+    "eintraege": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "skala",
+          "von",
+          "bis",
+          "bezeichnung",
+          "quelle",
+          "status",
+          "herkunft"
+        ],
+        "properties": {
+          "skala": {
+            "enum": [
+              "iq",
+              "wertpunkte",
+              "t",
+              "pr"
+            ]
+          },
+          "von": {
+            "type": "number",
+            "description": "Untergrenze, einschließlich."
+          },
+          "bis": {
+            "type": "number",
+            "description": "Obergrenze, einschließlich."
+          },
+          "bezeichnung": {
+            "type": "string",
+            "description": "z. B. eine Kategorie oder eine Grenzbereichs-Formulierung."
+          },
+          "quelle": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "enum": [
+              "entwurf",
+              "freigegeben"
+            ]
+          },
+          "herkunft": {
+            "enum": [
+              "psychologin",
+              "synthetisch"
+            ],
+            "description": "synthetisch nur unter tests/ und evals/, im Lieferpaket verboten."
+          },
+          "verfahren": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Testkatalog-IDs, für die der Eintrag gilt; leer heißt alle Verfahren dieser Skala."
+          }
+        }
+      }
+    }
+  }
+}

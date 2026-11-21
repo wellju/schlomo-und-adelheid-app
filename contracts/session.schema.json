@@ -1,0 +1,257 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "session.schema.json",
+  "title": "Sitzung",
+  "description": "Ein Fall bzw. eine Reflexionssitzung im Fallspeicher. Enthält keine Klardaten, keine Dateinamen, keine absoluten Daten.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "session_id",
+    "bezeichnung",
+    "modus",
+    "status",
+    "dokumente",
+    "versionen"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1"
+    },
+    "session_id": {
+      "type": "string",
+      "pattern": "^s-[0-9a-f]{8}$"
+    },
+    "bezeichnung": {
+      "type": "string",
+      "maxLength": 40,
+      "description": "Neutral, z. B. 'Fall 7'. Kein Name, keine Initialen."
+    },
+    "modus": {
+      "enum": [
+        "gutachten",
+        "intervision",
+        "supervision"
+      ]
+    },
+    "gutachtentyp": {
+      "enum": [
+        "spf",
+        "lrs",
+        "rechenstoerung",
+        "emotional_soziale_entwicklung"
+      ],
+      "description": "Nur bei modus gutachten."
+    },
+    "status": {
+      "enum": [
+        "import",
+        "eingabe",
+        "entwurf",
+        "pruefung",
+        "abgeschlossen",
+        "abgebrochen"
+      ]
+    },
+    "dokumente": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "dok_id",
+          "format",
+          "quelle_rolle",
+          "freigabe"
+        ],
+        "properties": {
+          "dok_id": {
+            "type": "string",
+            "pattern": "^d-[0-9a-f]{8}$"
+          },
+          "format": {
+            "enum": [
+              "pdf_text",
+              "pdf_scan",
+              "docx",
+              "xlsx",
+              "jpg",
+              "png",
+              "heic",
+              "doc",
+              "xls"
+            ]
+          },
+          "quelle_rolle": {
+            "type": "string",
+            "description": "Rollenbezeichnung der Quelle, z. B. 'Bericht der Klassenlehrerin'."
+          },
+          "freigabe": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "status",
+              "funde_je_kategorie"
+            ],
+            "properties": {
+              "status": {
+                "enum": [
+                  "offen",
+                  "blockiert",
+                  "freigegeben"
+                ]
+              },
+              "funde_je_kategorie": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "direkte_identifikatoren": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "datumsangaben": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "orte_einrichtungen": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "seltene_merkmale": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "versteckte_inhalte": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "bilder": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "unsicher": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "required": [
+                  "direkte_identifikatoren",
+                  "datumsangaben",
+                  "orte_einrichtungen",
+                  "seltene_merkmale",
+                  "versteckte_inhalte",
+                  "bilder",
+                  "unsicher"
+                ]
+              },
+              "geprueft_bestaetigt": {
+                "type": "boolean",
+                "description": "Pflicht true für status freigegeben."
+              }
+            },
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "freigegeben"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "geprueft_bestaetigt"
+              ],
+              "properties": {
+                "geprueft_bestaetigt": {
+                  "const": true
+                }
+              }
+            }
+          },
+          "text_anonymisiert": {
+            "type": "string",
+            "description": "Nur vorhanden, wenn freigegeben.",
+            "maxLength": 200000
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "required": [
+                "text_anonymisiert"
+              ]
+            },
+            "then": {
+              "properties": {
+                "freigabe": {
+                  "properties": {
+                    "status": {
+                      "const": "freigegeben"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "freigabe": {
+                  "properties": {
+                    "funde_je_kategorie": {
+                      "properties": {
+                        "unsicher": {
+                          "exclusiveMinimum": 0
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "freigabe": {
+                  "properties": {
+                    "status": {
+                      "not": {
+                        "const": "freigegeben"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "befunde": {
+      "type": "array",
+      "items": {
+        "$ref": "befund.schema.json"
+      }
+    },
+    "versionen": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "regelwerk",
+        "testkatalog"
+      ],
+      "properties": {
+        "regelwerk": {
+          "type": "string"
+        },
+        "testkatalog": {
+          "type": "string"
+        },
+        "stilprofil": {
+          "type": "string"
+        },
+        "konfiguration": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

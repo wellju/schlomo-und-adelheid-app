@@ -1,0 +1,146 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "regelergebnis.schema.json",
+  "title": "Ergebnis der Fachregelprüfung",
+  "description": "Ausgabe von pruefe_fachregeln. Deterministisch, wird vom Elefanten unverändert übernommen.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "regelwerk_version",
+    "testkatalog_version",
+    "ergebnisse",
+    "gesamt"
+  ],
+  "properties": {
+    "regelwerk_version": {
+      "type": "string"
+    },
+    "testkatalog_version": {
+      "type": "string"
+    },
+    "ergebnisse": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "regel_id",
+          "regel_version",
+          "regel_status",
+          "ergebnis",
+          "begruendung",
+          "felder",
+          "wirkung"
+        ],
+        "properties": {
+          "regel_id": {
+            "type": "string",
+            "pattern": "^[a-z0-9_]+$",
+            "description": "IDs laut Nachtrag 1, Tabelle Regel-IDs."
+          },
+          "regel_version": {
+            "type": "string"
+          },
+          "regel_status": {
+            "enum": [
+              "entwurf",
+              "freigegeben"
+            ]
+          },
+          "ergebnis": {
+            "enum": [
+              "erfuellt",
+              "nicht_erfuellt",
+              "nicht_pruefbar"
+            ]
+          },
+          "begruendung": {
+            "type": "string",
+            "description": "Vom Code erzeugt, nennt Werte und Grenzen."
+          },
+          "felder": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "JSON Pointer in gutachten-input"
+            }
+          },
+          "testergebnis_id": {
+            "type": "string"
+          },
+          "wirkung": {
+            "enum": [
+              "blockiert_diagnose",
+              "blockiert_export",
+              "hinweis"
+            ]
+          }
+        }
+      }
+    },
+    "gesamt": {
+      "enum": [
+        "erfuellt",
+        "nicht_erfuellt",
+        "nicht_pruefbar"
+      ],
+      "description": "Nur aus Regeln mit blockierender Wirkung: nicht_erfuellt, sobald eine blockierende Regel nicht erfüllt ist; sonst nicht_pruefbar, sobald eine blockierende Regel nicht prüfbar ist. Hinweise ändern gesamt nie."
+    },
+    "schweregrad_vorschlag": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stufe",
+        "hinweis"
+      ],
+      "properties": {
+        "stufe": {
+          "enum": [
+            "leicht",
+            "mittelgradig",
+            "schwer",
+            "schwerst",
+            "kein_vorschlag"
+          ]
+        },
+        "hinweis": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Pflicht: Einteilung grob orientierend, unter IQ 50 oft nicht zuverlässig."
+        }
+      }
+    }
+  },
+  "$defs": {
+    "fuer_claude": {
+      "description": "Regelergebnis, das Claude sehen darf: keine diagnosebezogenen Regeln (awmf_*) und kein Schweregrad.",
+      "allOf": [
+        {
+          "$ref": "#"
+        },
+        {
+          "not": {
+            "required": [
+              "schweregrad_vorschlag"
+            ]
+          }
+        },
+        {
+          "properties": {
+            "ergebnisse": {
+              "items": {
+                "properties": {
+                  "regel_id": {
+                    "not": {
+                      "pattern": "^awmf_"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

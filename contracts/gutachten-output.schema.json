@@ -1,0 +1,258 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "gutachten-output.schema.json",
+  "title": "Gutachten-Entwurf",
+  "description": "Fließtexte in der Abschnittsfolge der Vorlage. Jeder Satz verweist auf sein Eingabefeld, Fehlendes ist Lücke. Testbefunde als Tabelle mit Kategorie aus der Kategorienskala, nie mit Zahl im Text.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "session_id",
+    "gutachtentyp",
+    "vorlage_id",
+    "entwurf_version",
+    "abschnitte",
+    "regelergebnis",
+    "platzhalter"
+  ],
+  "$defs": {
+    "zeiger": {
+      "type": "string",
+      "pattern": "^/",
+      "description": "JSON Pointer in gutachten-input."
+    },
+    "saetze": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "text",
+              "quellen"
+            ],
+            "properties": {
+              "text": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000
+              },
+              "quellen": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "$ref": "#/$defs/zeiger"
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "luecke"
+            ],
+            "properties": {
+              "luecke": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "feld",
+                  "hinweis"
+                ],
+                "properties": {
+                  "feld": {
+                    "$ref": "#/$defs/zeiger"
+                  },
+                  "hinweis": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "properties": {
+    "schema_version": {
+      "const": "3"
+    },
+    "session_id": {
+      "type": "string",
+      "pattern": "^s-[0-9a-f]{8}$"
+    },
+    "gutachtentyp": {
+      "enum": [
+        "spf",
+        "lrs",
+        "rechenstoerung",
+        "emotional_soziale_entwicklung"
+      ]
+    },
+    "vorlage_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$",
+      "description": "Wie vorlage.schema.json; nie ein Pfad."
+    },
+    "entwurf_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "stilprofil_version": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Nur ein freigegebenes Profil."
+    },
+    "kategorienskala_version": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "abschnitte": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "abschnitt_id"
+        ],
+        "properties": {
+          "abschnitt_id": {
+            "enum": [
+              "vorstellungsgrund",
+              "schullaufbahn",
+              "vorbefunde",
+              "anamnese",
+              "verhaltensbeobachtung",
+              "testbefunde",
+              "leistungsproben",
+              "diagnose",
+              "empfehlung"
+            ],
+            "description": "Folge laut Vorlage. diagnose nie bei spf (Eltern erhalten das Gutachten), bei lrs und rechenstoerung nur mit Q1."
+          },
+          "absaetze": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "absatz_id",
+                "saetze"
+              ],
+              "properties": {
+                "absatz_id": {
+                  "type": "string"
+                },
+                "saetze": {
+                  "$ref": "#/$defs/saetze"
+                }
+              }
+            }
+          },
+          "tabellen": {
+            "type": "array",
+            "description": "Nur im Abschnitt testbefunde: je Verfahren Baustein und Ergebnistabelle.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "testergebnis_id",
+                "baustein_quelle",
+                "zeilen"
+              ],
+              "properties": {
+                "testergebnis_id": {
+                  "type": "string"
+                },
+                "baustein_quelle": {
+                  "type": "string",
+                  "description": "Testkatalog-ID; der Baustein wird unverändert aus dem Katalog eingesetzt, nie vom LLM."
+                },
+                "zeilen": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "kennung",
+                      "wert_quelle"
+                    ],
+                    "properties": {
+                      "kennung": {
+                        "type": "string",
+                        "description": "Index oder Subtest laut Katalog."
+                      },
+                      "wert_quelle": {
+                        "$ref": "#/$defs/zeiger"
+                      },
+                      "kategorie": {
+                        "type": "string",
+                        "description": "Bezeichnung aus der Kategorienskala, deterministisch abgeleitet."
+                      },
+                      "kategorie_luecke": {
+                        "type": "string",
+                        "description": "Grund, falls keine Kategorie ableitbar ist."
+                      }
+                    },
+                    "oneOf": [
+                      {
+                        "required": [
+                          "kategorie"
+                        ]
+                      },
+                      {
+                        "required": [
+                          "kategorie_luecke"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "regelergebnis": {
+      "$ref": "regelergebnis.schema.json#/$defs/fuer_claude"
+    },
+    "platzhalter": {
+      "type": "array",
+      "uniqueItems": true,
+      "description": "Kopffelder aus der Vorlage, von der Psychologin in Word auszufüllen.",
+      "items": {
+        "$ref": "vorlage.schema.json#/$defs/platzhalter"
+      }
+    }
+  },
+  "if": {
+    "properties": {
+      "gutachtentyp": {
+        "const": "spf"
+      }
+    }
+  },
+  "then": {
+    "properties": {
+      "abschnitte": {
+        "items": {
+          "properties": {
+            "abschnitt_id": {
+              "not": {
+                "const": "diagnose"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
