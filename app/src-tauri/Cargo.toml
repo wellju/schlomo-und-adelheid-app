@@ -16,5 +16,10 @@ tauri-build = { version = "2", features = [] }
 tauri = { version = "2", features = [] }
 tauri-plugin-dialog = "2"
 
+[features]
+# Only for the CI smoke test: release builds switch the WebView debugging interface off, which the test attaches
+# to (tauri-docs v2, develop/Debug). The installer that is delivered is built without it.
+smoke = ["tauri/devtools"]
+
 [profile.release]
 strip = true

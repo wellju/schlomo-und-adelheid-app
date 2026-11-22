@@ -42,9 +42,9 @@ jobs:
         run: npm ci
       - name: Licences and delivery files (needs the app packages for the font licences)
         run: python -I scripts/build_lieferung.py
-      - name: App build (NSIS, per user)
+      - name: Test build (NSIS, per user, with the WebView debugging interface for the smoke test)
         working-directory: app
-        run: npx tauri build --bundles nsis
+        run: npx tauri build --bundles nsis --features smoke
       - name: Install without admin rights
         run: |
           $setup = Get-ChildItem app\src-tauri\target\release\bundle\nsis\*-setup.exe | Select-Object -First 1
@@ -64,6 +64,11 @@ jobs:
           Get-ChildItem "$env:LOCALAPPDATA/at.schlomo-und-adelheid.app" -Recurse -ErrorAction SilentlyContinue | Select-Object FullName
           Get-Content "$env:LOCALAPPDATA/at.schlomo-und-adelheid.app/logs/engine.log" -ErrorAction SilentlyContinue | Select-Object -Last 20
           Get-WinEvent -LogName Application -MaxEvents 30 -ErrorAction SilentlyContinue | Where-Object { $_.LevelDisplayName -eq 'Error' } | Format-List TimeCreated, ProviderName, Message
+      - name: Release build (NSIS, per user, without the debugging interface; this installer is delivered)
+        working-directory: app
+        run: |
+          Remove-Item src-tauri/target/release/bundle/nsis -Recurse -Force
+          npx tauri build --bundles nsis
       - uses: actions/upload-artifact@v4
         with:
           name: app-windows-x64
