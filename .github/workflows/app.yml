@@ -44,7 +44,8 @@ jobs:
         run: python -I scripts/build_lieferung.py
       - name: Test build (NSIS, per user, with the WebView debugging interface for the smoke test)
         working-directory: app
-        run: npx tauri build --bundles nsis --features smoke
+        # The window opens the debugging port itself (tauri.smoke.conf.json): WebView2 ignored the environment variable.
+        run: npx tauri build --bundles nsis --features smoke --config src-tauri/tauri.smoke.conf.json
       - name: Install without admin rights
         run: |
           $setup = Get-ChildItem app\src-tauri\target\release\bundle\nsis\*-setup.exe | Select-Object -First 1

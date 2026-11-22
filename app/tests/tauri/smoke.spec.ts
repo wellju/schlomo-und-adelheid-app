@@ -1,5 +1,5 @@
 // Built app with bundled engine: starts, version handshake succeeds, Screen 13 without axe violations.
-// WebView2 opens a debugging port on request (WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS), Playwright attaches over CDP.
+// The test build opens a WebView2 debugging port (src-tauri/tauri.smoke.conf.json), Playwright attaches over CDP.
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -14,8 +14,7 @@ test('App startet mit Engine', async () => {
   const t0 = Date.now();
   const proc = spawn(exe!, [], {
     cwd: path.dirname(exe!),
-    env: { ...process.env, WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: '--remote-debugging-port=9333 --remote-allow-origins=*',
-           SCHLOMO_DATA_DIR: path.join(basis, 'daten'), SCHLOMO_WISSENSBASIS: path.join(basis, 'wissen') },
+    env: { ...process.env, SCHLOMO_DATA_DIR: path.join(basis, 'daten'), SCHLOMO_WISSENSBASIS: path.join(basis, 'wissen') },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   let ende: string | null = null;
