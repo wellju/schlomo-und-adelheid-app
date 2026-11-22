@@ -33,6 +33,9 @@ test('App startet mit Engine', async () => {
     console.log(`Seiten: ${pages.map((p) => p.url()).join(', ')}`);
     const page = pages.find((p) => !p.url().startsWith('about:')) ?? pages[0];
     page.on('console', (m) => console.log(`Konsole ${m.type()}: ${m.text()}`));
+    // CDP attaches while the window still shows about:blank; a hash set there is lost when the app page loads.
+    await page.waitForURL(/tauri\.localhost/, { timeout: 60000 });
+    await expect(page.getByRole('heading', { level: 1, name: 'Fälle' })).toBeVisible({ timeout: 60000 });
     await page.evaluate(() => { location.hash = '#/einstellungen'; });
     try {
       await expect(page.getByRole('heading', { name: 'Noch nicht eingerichtet' })).toBeVisible({ timeout: 30000 });
