@@ -56,6 +56,14 @@ jobs:
       - name: Smoke test of the installed app
         working-directory: app
         run: npx playwright test -c playwright.tauri.config.ts
+      - name: Diagnosis after a failed smoke test
+        if: failure()
+        run: |
+          Get-ChildItem "$env:LOCALAPPDATA\Schlomo und Adelheid" -Recurse -Depth 1 | Select-Object FullName, Length | Format-Table -AutoSize
+          Get-Process | Where-Object { $_.Name -match 'schlomo|webview|engine' } | Format-Table Name, Id, StartTime
+          Get-ChildItem "$env:LOCALAPPDATA/at.schlomo-und-adelheid.app" -Recurse -ErrorAction SilentlyContinue | Select-Object FullName
+          Get-Content "$env:LOCALAPPDATA/at.schlomo-und-adelheid.app/logs/engine.log" -ErrorAction SilentlyContinue | Select-Object -Last 20
+          Get-WinEvent -LogName Application -MaxEvents 30 -ErrorAction SilentlyContinue | Where-Object { $_.LevelDisplayName -eq 'Error' } | Format-List TimeCreated, ProviderName, Message
       - uses: actions/upload-artifact@v4
         with:
           name: app-windows-x64
@@ -81,6 +89,9 @@ jobs:
         with:
           node-version: "24"
       - uses: dtolnay/rust-toolchain@stable
+      - name: qpdf for pikepdf (no wheel for Intel Macs with this Python, it builds from source)
+        if: matrix.runner == 'macos-15-intel'
+        run: brew install qpdf
       - name: Engine build (PyInstaller) into the app resources
         run: |
           python -m pip install --upgrade pip

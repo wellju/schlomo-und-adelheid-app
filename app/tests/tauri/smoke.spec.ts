@@ -13,15 +13,22 @@ test('App startet mit Engine', async () => {
   const basis = fs.mkdtempSync(path.join(fs.realpathSync.native(os.tmpdir()), 'schlomo-tauri-'));
   const t0 = Date.now();
   const proc = spawn(exe!, [], {
-    env: { ...process.env, WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: '--remote-debugging-port=9333',
+    cwd: path.dirname(exe!),
+    env: { ...process.env, WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: '--remote-debugging-port=9333 --remote-allow-origins=*',
            SCHLOMO_DATA_DIR: path.join(basis, 'daten'), SCHLOMO_WISSENSBASIS: path.join(basis, 'wissen') },
+    stdio: ['ignore', 'pipe', 'pipe'],
   });
+  let ende: string | null = null;
+  proc.on('exit', (code, signal) => { ende = `beendet mit ${code ?? signal}`; });
+  proc.on('error', (e) => { ende = `Startfehler ${e.message}`; });
+  proc.stderr?.on('data', (d) => process.stderr.write(d));
   try {
     let browser;
-    for (let i = 0; i < 120 && !browser; i++) {
-      browser = await chromium.connectOverCDP('http://127.0.0.1:9333').catch(() => undefined);
+    for (let i = 0; i < 90 && !browser && !ende; i++) {
+      browser = await chromium.connectOverCDP('http://127.0.0.1:9333', { timeout: 5000 }).catch(() => undefined);
       if (!browser) await new Promise((r) => setTimeout(r, 1000));
     }
+    expect(ende, 'die App hat sich vor dem Anhängen beendet').toBeNull();
     expect(browser, 'WebView2 nicht erreichbar').toBeTruthy();
     const page = browser!.contexts()[0].pages()[0];
     await page.evaluate(() => { location.hash = '#/einstellungen'; });
