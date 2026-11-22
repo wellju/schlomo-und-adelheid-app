@@ -16,7 +16,9 @@ ROOT = Path(__file__).resolve().parents[2]
 PLUGIN = ROOT / "plugin"
 CHAT_SKILLS = {"gutachten": ("gutachten", "gutachten-output"), "stil-lernen": ("stil_lernen", "stilprofil"),
                "pruefen-goldfisch": ("pruefung_goldfisch", "befunde"), "pruefen-stil": ("pruefung_stil", "befunde"),
-               "pruefen-elefant": ("pruefung_elefant", "befunde"), "diagnosevorschlag": ("diagnosevorschlag", "diagnosevorschlag")}
+               "pruefen-elefant": ("pruefung_elefant", "befunde"), "diagnosevorschlag": ("diagnosevorschlag", "diagnosevorschlag"),
+               "intervision": ("intervision", "protokoll-intervision"),  # Task 3.2
+               "supervision": ("supervision", "protokoll-supervision")}
 
 
 def _answer(skill: str, block: dict) -> str:
@@ -36,7 +38,7 @@ def test_plugin_holds_only_allowed_files():
     assert meta["name"] == "schlomo-und-adelheid" and meta["license"] == "Apache-2.0"
 
 
-@pytest.mark.parametrize("name", ["gutachten", "stil-lernen"])
+@pytest.mark.parametrize("name", ["gutachten", "stil-lernen", "intervision", "supervision"])
 def test_shared_skills_equal_their_source(name):
     """One skill for Code-Tab and chat (ADR 0002); scripts/build_plugin.py copies it."""
     src = ROOT / "arbeitsordner" / ".claude" / "skills" / name / "SKILL.md"
@@ -49,10 +51,10 @@ def test_chat_skill_text(name):
     text = (PLUGIN / "skills" / name / "SKILL.md").read_text(encoding="utf-8")
     head = text.split("---")[1]
     assert f"name: {name}" in head and "description:" in head
-    assert f"`art` nicht `{art}`" in text and f'"typ": "{typ}"' in text
+    assert re.search(f"`art` (nicht|weder) `{art}`", text) and f'"typ": "{typ}"' in text
     assert f"`Skill {name} aktiv`" in text and "genau ein Codeblock" in text
     assert "um das Paket" in " ".join(text.split())  # never works with typed-in case data
-    if name not in ("gutachten", "stil-lernen"):
+    if name not in ("gutachten", "stil-lernen", "intervision", "supervision"):
         assert not re.search(r"mcp__engine__", text)  # chat has no engine tools
     for marker in ("SYN-", "Quastberger", "Lenja"):
         assert marker not in text

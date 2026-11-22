@@ -85,6 +85,12 @@ def save(record: dict) -> None:
         record.digest = hashlib.sha256(data.encode("utf-8")).hexdigest()
 
 
+def check_unchanged(record: dict) -> None:
+    """Raise the write conflict now, before a step that cannot be undone (closing a package, EGM Task 3)."""
+    if isinstance(record, Record) and _digest(_path(record["session"]["session_id"])) != record.digest:
+        raise EngineError("E_BLOCKIERT", "konflikt")
+
+
 def load(session_id: str) -> Record:
     path = _path(session_id)
     if not path.exists():

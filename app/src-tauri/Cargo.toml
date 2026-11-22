@@ -1,0 +1,20 @@
+[package]
+name = "schlomo-und-adelheid"
+version = "0.4.0"
+edition = "2021"
+license = "Apache-2.0"
+description = "Desktop-App Schlomo und Adelheid: Hülle um die lokale Engine"
+
+[lib]
+name = "schlomo_app"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
+
+[profile.release]
+strip = true

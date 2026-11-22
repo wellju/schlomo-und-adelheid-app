@@ -1,0 +1,108 @@
+# Builds the Tauri app with the bundled engine (Task 4). Windows: installs the per-user NSIS installer without admin
+# rights and runs the smoke test against the installed app. macOS arm64 and x64: build only, unsigned. Synthetic data only.
+name: app
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 90
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Engine build (PyInstaller) into the app resources
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r engine/requirements.txt pyinstaller==6.22.3 packaging==26.3
+          python -m pip install https://github.com/explosion/spacy-models/releases/download/de_core_news_md-3.8.0/de_core_news_md-3.8.0-py3-none-any.whl
+          python -I scripts/build_pyinstaller.py "${{ github.workspace }}\app\src-tauri\resources"
+      - name: Tesseract with German into the app resources (Apache-2.0)
+        run: |
+          choco install tesseract -y --no-progress
+          Invoke-WebRequest https://github.com/tesseract-ocr/tessdata_fast/raw/main/deu.traineddata -OutFile "C:/Program Files/Tesseract-OCR/tessdata/deu.traineddata"
+          Copy-Item "C:/Program Files/Tesseract-OCR" app/src-tauri/resources/tesseract -Recurse
+      - name: App packages
+        working-directory: app
+        run: npm ci
+      - name: Licences and delivery files (needs the app packages for the font licences)
+        run: python -I scripts/build_lieferung.py
+      - name: App build (NSIS, per user)
+        working-directory: app
+        run: npx tauri build --bundles nsis
+      - name: Install without admin rights
+        run: |
+          $setup = Get-ChildItem app\src-tauri\target\release\bundle\nsis\*-setup.exe | Select-Object -First 1
+          Start-Process $setup.FullName -ArgumentList '/S' -Wait
+          $root = "$env:LOCALAPPDATA\Schlomo und Adelheid"
+          $exe = Get-ChildItem $root -Filter *.exe | Where-Object { $_.Name -notlike 'uninstall*' } | Select-Object -First 1
+          if (-not $exe) { Write-Error "Installierte App nicht gefunden"; exit 1 }
+          "SCHLOMO_APP_EXE=$($exe.FullName)" >> $env:GITHUB_ENV
+      - name: Smoke test of the installed app
+        working-directory: app
+        run: npx playwright test -c playwright.tauri.config.ts
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app-windows-x64
+          path: app/src-tauri/target/release/bundle/nsis/*-setup.exe
+
+  macos:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-latest
+            name: app-macos-arm64
+          - runner: macos-15-intel
+            name: app-macos-x64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Engine build (PyInstaller) into the app resources
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r engine/requirements.txt pyinstaller==6.22.3 packaging==26.3
+          python -m pip install https://github.com/explosion/spacy-models/releases/download/de_core_news_md-3.8.0/de_core_news_md-3.8.0-py3-none-any.whl
+          python -I scripts/build_pyinstaller.py "$GITHUB_WORKSPACE/app/src-tauri/resources"
+      - name: App packages
+        working-directory: app
+        run: npm ci
+      - name: Licences; Tesseract is not bundled on macOS (Homebrew builds are not relocatable, see the guide)
+        run: |
+          python -I scripts/build_lieferung.py
+          mkdir -p app/src-tauri/resources/tesseract
+          echo "Tesseract unter macOS: brew install tesseract tesseract-lang" > app/src-tauri/resources/tesseract/LIESMICH.txt
+      - name: App build (unsigned)
+        working-directory: app
+        run: npx tauri build --bundles app,dmg
+      - name: Engine starts from the app bundle
+        run: |
+          ENGINE=$(find app/src-tauri/target/release/bundle/macos -path '*Resources/engine/engine' -type f | head -1)
+          echo '{"id":"1","fn":"status"}' | "$ENGINE" ui | grep '"ok": true'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}
+          path: app/src-tauri/target/release/bundle/dmg/*.dmg

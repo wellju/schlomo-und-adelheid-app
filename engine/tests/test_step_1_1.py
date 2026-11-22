@@ -125,11 +125,13 @@ def test_mcp_start_lists_tool_and_loads_no_recognition(env):
         receive(1)
         send({"jsonrpc": "2.0", "method": "notifications/initialized"})
         send({"jsonrpc": "2.0", "id": 2, "method": "tools/list"})
-        # docs/listen.md minus speichere_protokoll (Task 3) and the Task-5 tools
+        # docs/listen.md (with the Task-3 and Task-5 tools)
         assert sorted(t["name"] for t in receive(2)["result"]["tools"]) == sorted([
             "liste_sitzungen", "hole_gutachten_input", "hole_goldfisch_paket", "hole_stil_paket",
             "hole_elefant_paket", "hole_diagnose_paket", "pruefe_fachregeln", "pruefe_belege",
             "speichere_entwurf", "hole_entwurf", "speichere_befunde", "hole_stilprofil", "hole_probetexte",
-            "speichere_stilprofil", "speichere_diagnosevorschlag", "hole_wissensbasis"])
+            "speichere_stilprofil", "speichere_diagnosevorschlag", "hole_wissensbasis",
+            "hole_rubberduck_vorgaben", "hole_protokoll", "hole_protokoll_goldfisch", "speichere_protokoll",
+            "speichere_hypothesenpruefung", "hole_lernsignale", "schlage_konfiguration_vor", "starte_evals"])
     finally:
         proc.kill()

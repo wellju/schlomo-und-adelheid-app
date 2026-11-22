@@ -139,7 +139,8 @@ def test_q1_and_blind_comparison(full):
     with pytest.raises(EngineError) as e:  # blind: no comparison before the internal diagnosis
         uf.diagnosevergleich_laden({"session_id": sid})
     assert e.value.code == "E_BLOCKIERT"
-    uf.interne_diagnose_speichern({"session_id": sid, "interne_diagnose": {"text": INTERN, "icd10_code": "F70"}})
+    uf.interne_diagnose_speichern({"session_id": sid, "interne_diagnose": {"text": INTERN, "icd10_code": "F70"},
+                                "unsichere_bestaetigt": True})  # the marker is an uncertain NER hit (EGM Task 4 B4)
     out = uf.diagnosevergleich_laden({"session_id": sid})
     assert out["vergleich"] == {"engine": "gleich", "claude": "nicht_vergleichbar"}
     with pytest.raises(EngineError) as e:  # internal diagnosis cannot change after proposals were shown

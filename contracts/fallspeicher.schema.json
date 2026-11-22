@@ -115,6 +115,17 @@
           }
         ]
       }
+    },
+    "protokoll_pruefungen": {
+      "type": "array",
+      "description": "Prüfer, die das Rubberduck-Protokoll in Phase abschluss geprüft haben, auch ohne Befund (Task 3). Das Ende verlangt alle Prüfer des Modus.",
+      "items": {
+        "enum": [
+          "elefant",
+          "goldfisch"
+        ]
+      },
+      "uniqueItems": true
     }
   },
   "allOf": [

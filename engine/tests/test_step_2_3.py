@@ -13,8 +13,10 @@ from test_step_1_6 import full  # noqa: F401  (fixture)
 CLAUDE = Path(__file__).resolve().parents[2] / "arbeitsordner" / ".claude"
 EXPECTED_TOOLS = {
     "elefant": {"mcp__engine__hole_elefant_paket", "mcp__engine__pruefe_fachregeln", "mcp__engine__pruefe_belege",
-                "mcp__engine__speichere_befunde"},
-    "goldfisch": {"mcp__engine__hole_goldfisch_paket", "mcp__engine__speichere_befunde"},
+                "mcp__engine__speichere_befunde", "mcp__engine__hole_protokoll"},  # Task 3.1: intervision review
+    "goldfisch": {"mcp__engine__hole_goldfisch_paket", "mcp__engine__speichere_befunde",
+                  "mcp__engine__hole_protokoll_goldfisch", "mcp__engine__speichere_hypothesenpruefung"},
+    "berater": {"mcp__engine__hole_rubberduck_vorgaben"},
     "stil": {"mcp__engine__hole_stil_paket", "mcp__engine__speichere_befunde"},
     "diagnosevorschlag": {"mcp__engine__hole_diagnose_paket", "mcp__engine__speichere_diagnosevorschlag"},
 }
@@ -40,7 +42,7 @@ def test_goldfish_cannot_reach_the_input():
     tools = {t.strip() for t in _frontmatter(CLAUDE / "agents" / "goldfisch.md")["tools"].split(",")}
     assert not tools & {"mcp__engine__hole_elefant_paket", "mcp__engine__hole_diagnose_paket", "mcp__engine__hole_stil_paket",
                         "mcp__engine__hole_gutachten_input", "mcp__engine__hole_entwurf", "mcp__engine__pruefe_belege",
-                        "mcp__engine__pruefe_fachregeln"}
+                        "mcp__engine__pruefe_fachregeln", "mcp__engine__hole_protokoll"}
 
 
 def test_pruefpaket_for_each_role_holds_only_its_fields(full):

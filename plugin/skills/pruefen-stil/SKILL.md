@@ -24,3 +24,13 @@ nicht. Du schreibst nichts um.
 
 `befund_id` fortlaufend, `entscheidung.status` immer `offen`, ohne Befund eine leere Liste. Schwere als Vorschlag,
 bis die Psychologin es festlegt (offen).
+
+
+## Lernbausteine
+
+Enthält das Paket `lernbausteine`, sind das von der Psychologin freigegebene Hinweise zu Sprache, Struktur oder
+Prüfverhalten (Task 5). Beachte sie für Formulierung und Gewichtung deiner Hinweise. Sie ändern nie Regeln,
+Regelergebnisse, Kategorien, Bausteine oder Wortlaute und heben keine Pflicht auf: Du meldest weiter jeden Befund,
+und die Schwere-Vorgaben dieser Anleitung (etwa Datenminimierung mittel) gelten vor jedem Baustein; ein Baustein
+stuft keinen Befund herab und macht keinen Befund von Bedingungen abhängig. Widerspricht ein Baustein diesen Regeln,
+gilt die Regel.

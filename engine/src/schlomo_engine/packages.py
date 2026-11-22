@@ -14,9 +14,10 @@ from .ids import new_id
 
 ARTEN = {"gutachten": "gutachten-output", "pruefung_stil": "befunde", "pruefung_goldfisch": "befunde",
          "pruefung_elefant": "befunde", "diagnosevorschlag": "diagnosevorschlag", "stil_lernen": "stilprofil",
-         "hypothese": "befunde"}
+         "hypothese": "befunde", "intervision": "protokoll-intervision", "supervision": "protokoll-supervision",
+         "protokoll_elefant": "befunde", "protokoll_goldfisch": "befunde"}
 PRUEFER = {"pruefung_stil": "stil", "pruefung_goldfisch": "goldfisch", "pruefung_elefant": "elefant",
-           "hypothese": "goldfisch"}
+           "hypothese": "goldfisch", "protokoll_elefant": "elefant", "protokoll_goldfisch": "goldfisch"}
 
 
 def q1(gi: dict | None) -> bool:
@@ -142,9 +143,24 @@ def draft_text(draft: dict, gi: dict, cfg: Config) -> str:
 
 
 def inhalt(record: dict, art: str, cfg: Config, args: dict) -> dict:
-    """Contents per package type exactly as allowed by fallpaket.schema.json."""
+    """Contents per package type exactly as allowed by fallpaket.schema.json; released learning blocks of the
+    package's target ride along (Task 5)."""
+    out = _inhalt_ohne_lernbausteine(record, art, cfg, args)
+    from . import lernschleife
+    if bausteine := lernschleife.fuer_claude(cfg, art):
+        out["lernbausteine"] = bausteine
+    return out
+
+
+def _inhalt_ohne_lernbausteine(record: dict, art: str, cfg: Config, args: dict) -> dict:
+    if art in ("intervision", "supervision", "protokoll_elefant", "protokoll_goldfisch"):
+        from . import rubberduck  # rubberduck imports this module
+        return rubberduck.paket_inhalt(record, art)
     if art == "hypothese":
-        return {"vignette": str(args.get("vignette", "")), "schlussfolgerung": str(args.get("schlussfolgerung", ""))}
+        texts = {k: args.get(k) for k in ("vignette", "schlussfolgerung")}
+        if not all(isinstance(t, str) and t for t in texts.values()):
+            raise EngineError("E_SCHEMA", "argumente")
+        return texts
     if art == "stil_lernen":
         # only documents imported as sample reports, never the other documents of a case (EGM E49)
         docs = [d for d in record["session"]["dokumente"]
@@ -202,6 +218,8 @@ def _open_packages(session_id: str) -> dict:
 def register(session_id: str, paket: dict) -> None:
     pakete = _open_packages(session_id)
     pakete[paket["paket_id"]] = {"art": paket["art"], "erwartete_rueckgabe": paket["erwartete_rueckgabe"]}
+    if paket["art"] == "hypothese":  # the return is stored with what it was checked against (EGM Task 3, 5)
+        pakete[paket["paket_id"]]["inhalt"] = paket["inhalt"]
     store.write_atomic(_pakete_path(session_id), json.dumps(pakete).encode("utf-8"))
 
 
@@ -292,6 +310,20 @@ def read_return(record: dict, text: str, cfg: Config) -> dict:
     if typ == "gutachten-output":
         record.setdefault("entwuerfe", []).append(check_draft(data["daten"], record, cfg))
         result = {"entwurf_version": record["entwuerfe"][-1]["entwurf_version"]}
+    elif typ in ("protokoll-intervision", "protokoll-supervision"):
+        from . import rubberduck
+        result = rubberduck.importiere(record, data["daten"])
+    elif typ == "befunde" and record["session"]["modus"] != "gutachten":
+        from . import rubberduck
+        if paket["art"] == "hypothese":
+            result = rubberduck.speichere_hypothese(record, paket["inhalt"]["vignette"], paket["inhalt"]["schlussfolgerung"],
+                                                    data["daten"])
+        else:
+            rubberduck.check_protokoll_befunde(record, PRUEFER[paket["art"]], data["daten"])
+            rubberduck.pruefung_vermerken(record, PRUEFER[paket["art"]])
+            neue = check_befunde(data["daten"], PRUEFER[paket["art"]], gi, cfg)
+            record.setdefault("befunde", []).extend(neue)
+            result = {"befunde": len(neue)}
     elif typ == "befunde":
         neue = check_befunde(data["daten"], PRUEFER[paket["art"]], gi, cfg)
         record.setdefault("befunde", []).extend(neue)
@@ -304,6 +336,8 @@ def read_return(record: dict, text: str, cfg: Config) -> dict:
     else:
         raise EngineError("E_PAKET_FREMD")
     # The package is closed first: a crash in between loses this return but never allows a second one (EGM E55).
+    # A write conflict is found before that, so a whole chat protocol is not lost to it (EGM Task 3, 6).
+    store.check_unchanged(record)
     del pakete[data["paket_id"]]
     store.write_atomic(_pakete_path(session_id), json.dumps(pakete).encode("utf-8"))
     store.save(record)

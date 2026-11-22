@@ -3,12 +3,13 @@
 CODES = frozenset({
     "E_SCHEMA", "E_NICHT_GEFUNDEN", "E_DATEITYP", "E_MAKRO", "E_LIBREOFFICE_FEHLT", "E_BEZEICHNUNG",
     "E_ANONYMISIERUNG_OFFEN", "E_BLOCKIERT", "E_Q1", "E_ABSCHNITT_FEHLT", "E_KOPFFELD_FEHLT", "E_PAKET_FREMD",
-    "E_BELEG", "E_REGELABWEICHUNG", "E_VERSION", "E_INTERN", "E_OCR_FEHLT",
+    "E_BELEG", "E_REGELABWEICHUNG", "E_PHASENFOLGE", "E_VERSION", "E_INTERN", "E_OCR_FEHLT",
 })
 
 REASONS = frozenset({"schema", "unbekannte_funktion", "json", "argumente", "datenordner", "groesse", "format",
                      "beschaedigt",
-                     "konflikt", "namen_fehlen", "pfad"})
+                     "konflikt", "namen_fehlen", "pfad", "hinweise_fehlen", "pruefung_fehlt",
+                     "gesperrt", "signale"})  # the last two: learning loop (Task 5)
 
 
 class EngineError(Exception):

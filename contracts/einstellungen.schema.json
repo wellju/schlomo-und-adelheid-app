@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "einstellungen.schema.json",
+  "title": "Einstellungen der App",
+  "description": "einstellungen.json im App-Datenordner (Screen 13). Keine Namen, keine Falldaten. Die Qualifikationen füllen gutachten-input.verfasserin; Q1 prüft weiter die Engine je Fall.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "verbindung", "qualifikationen", "darstellung"],
+  "properties": {
+    "schema_version": { "const": "1" },
+    "verbindung": { "enum": ["desktop", "browser"], "description": "Verbindung zu Claude: Code-Tab in Claude Desktop oder Claude im Browser (ADR 0002)." },
+    "qualifikationen": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "gutachten-input.schema.json#/properties/verfasserin/properties/qualifikationen/items" }
+    },
+    "darstellung": { "enum": ["system", "hell", "dunkel"] }
+  }
+}

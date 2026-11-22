@@ -11,7 +11,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 PLUGIN = ROOT / "plugin"
-SHARED = ("gutachten", "stil-lernen")  # same skill in Code-Tab and chat; the source lives in arbeitsordner/
+SHARED = ("gutachten", "stil-lernen", "intervision", "supervision")  # same skill in Code-Tab and chat; the source lives in arbeitsordner/
 
 
 def sync() -> None:

@@ -710,7 +710,8 @@ def test_log_of_full_corpus_run_holds_no_content(env, tmp_path):
     assert e("eingabe_speichern", session_id=sid, gutachten_input=gi, unsichere_bestaetigt=True)["result"]["gespeichert"]
     assert e("fachregeln_pruefen", session_id=sid)["ok"]
     assert e("erzeuge_paket", session_id=sid, art="diagnosevorschlag")["ok"]
-    assert e("interne_diagnose_speichern", session_id=sid, interne_diagnose={"text": INTERN, "icd10_code": "F70"})["ok"]
+    assert e("interne_diagnose_speichern", session_id=sid, interne_diagnose={"text": INTERN, "icd10_code": "F70"},
+             unsichere_bestaetigt=True)["result"]["gespeichert"]
     assert e("diagnosevergleich_laden", session_id=sid)["ok"]
     marker = tmp_path / "SYN-PFAD-4711" / f"{docs[0].kind_marker if hasattr(docs[0], 'kind_marker') else 'x'}.docx"
     errors = [e("dokument_importieren", session_id=sid, pfad=str(marker), quelle_rolle="Bericht"),

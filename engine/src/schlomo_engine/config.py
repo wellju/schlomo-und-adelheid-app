@@ -1,4 +1,5 @@
-"""Configuration the psychologist maintains (regelwerk, testkatalog, kategorienskala, icd10-referenz), validated against
+"""Configuration the psychologist maintains (regelwerk, testkatalog, kategorienskala, icd10-referenz,
+hinweise, berater), validated against
 contracts/. The engine ships none: a missing file means the related rules yield "nicht_pruefbar", nothing is guessed."""
 import json
 import os
@@ -9,7 +10,9 @@ from .contracts import validate
 from .errors import EngineError
 
 FILES = {"regelwerk": "regelwerk.json", "testkatalog": "testkatalog.json",
-         "kategorienskala": "kategorienskala.json", "icd10-referenz": "icd10-referenz.json"}
+         "kategorienskala": "kategorienskala.json", "icd10-referenz": "icd10-referenz.json",
+         "hinweise": "hinweise.json", "berater": "berater.json",  # Rubberduck (Task 3)
+         "lernbausteine": "lernbausteine.json"}  # learning loop (Task 5)
 
 
 @dataclass
@@ -18,6 +21,9 @@ class Config:
     testkatalog: dict | None
     kategorienskala: dict | None
     icd10: dict | None
+    hinweise: dict | None = None
+    berater: dict | None = None
+    lernbausteine: dict | None = None
 
     def version(self, name: str) -> str:
         doc = {"regelwerk": self.regelwerk, "testkatalog": self.testkatalog}[name]
@@ -38,7 +44,13 @@ class Config:
 
 
 def config_dir() -> Path | None:
-    return Path(os.environ["SCHLOMO_KONFIGURATION"]) if os.environ.get("SCHLOMO_KONFIGURATION") else None
+    """SCHLOMO_KONFIGURATION, else konfiguration/ next to the case store once the app has set it up (Task 4.6,
+    einrichten); without it None: then nothing is configured and the related rules are not checkable."""
+    if os.environ.get("SCHLOMO_KONFIGURATION"):
+        return Path(os.environ["SCHLOMO_KONFIGURATION"])
+    from . import store
+    default = store.data_dir().parent / "konfiguration"
+    return default if default.is_dir() else None
 
 
 def check_scale(skala: dict) -> None:
@@ -68,4 +80,5 @@ def load(directory: Path | None = None) -> Config:
         docs[name] = doc
     if docs["kategorienskala"]:
         check_scale(docs["kategorienskala"])
-    return Config(docs["regelwerk"], docs["testkatalog"], docs["kategorienskala"], docs["icd10-referenz"])
+    return Config(docs["regelwerk"], docs["testkatalog"], docs["kategorienskala"], docs["icd10-referenz"],
+                  docs["hinweise"], docs["berater"], docs["lernbausteine"])

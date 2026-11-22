@@ -3,6 +3,6 @@ import secrets
 
 
 def new_id(prefix: str) -> str:
-    if prefix not in ("s", "d", "p", "bf", "f", "ls", "pg"):
+    if prefix not in ("s", "d", "p", "bf", "f", "ls", "pg", "lb", "vs"):
         raise ValueError(prefix)
     return f"{prefix}-{secrets.token_hex(4)}"

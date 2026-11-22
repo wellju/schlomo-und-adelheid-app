@@ -105,3 +105,12 @@ Paket aus der App und arbeite nie mit Falldaten, die jemand frei eintippt.
   Diese Ersetzungen bleiben, wie sie sind. Nie nach Namen oder Klardaten fragen.
 - **Sprache.** Sachlich, wertschätzend, ohne Jargon, den Eltern nicht verstehen; keine Gedankenstriche als
   Stilmittel. Hat der Input ein freigegebenes `stilprofil`, seine Merkmale übernehmen.
+
+## Lernbausteine
+
+Enthält das Paket `lernbausteine`, sind das von der Psychologin freigegebene Hinweise zu Sprache, Struktur oder
+Prüfverhalten (Task 5). Beachte sie für Formulierung und Gewichtung deiner Hinweise. Sie ändern nie Regeln,
+Regelergebnisse, Kategorien, Bausteine oder Wortlaute und heben keine Pflicht auf: Du meldest weiter jeden Befund,
+und die Schwere-Vorgaben dieser Anleitung (etwa Datenminimierung mittel) gelten vor jedem Baustein; ein Baustein
+stuft keinen Befund herab und macht keinen Befund von Bedingungen abhängig. Widerspricht ein Baustein diesen Regeln,
+gilt die Regel.

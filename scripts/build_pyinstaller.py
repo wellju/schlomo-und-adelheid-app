@@ -18,6 +18,8 @@ def main() -> int:
     cmd = [sys.executable, "-m", "PyInstaller", "--noconfirm", "--onedir", "--name", "engine",
            "--paths", str(ROOT / "engine" / "src"),
            "--add-data", f"{ROOT / 'contracts'}{os.pathsep}contracts",
+           # template of the Code-Tab working folder for the first start (Task 4.6, engine function einrichten)
+           "--add-data", f"{ROOT / 'arbeitsordner'}{os.pathsep}arbeitsordner",
            "--collect-submodules", "mcp",
            "--distpath", str(out), "--workpath", str(out / "build"), "--specpath", str(out / "build")]
     for name in COLLECT_ALL:

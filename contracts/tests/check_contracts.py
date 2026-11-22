@@ -237,6 +237,61 @@ sp_c = {"schema_version": "1", "version": "1", "merkmale": [{"merkmal_id": "m1",
 expect(FP, dict(gp, inhalt=dict(gp["inhalt"], stilprofil=sp_c)), True, "Gutachten-Paket mit Stilprofil ohne Zitate")
 expect(FP, dict(gp, inhalt=dict(gp["inhalt"], stilprofil=sp)), False, "Gutachten-Paket mit Belegzitaten")
 
+# Task 3.1: hint wordings and adviser perspectives
+HW = "hinweise.schema.json"
+hw = {"schema_version": "1", "version": "syn-1", "herkunft": "synthetisch", "kindeswohl": {"text": "x"},
+      "akute_gefaehrdung": {"text": "y"}}
+expect(HW, hw, True, "Hinweis-Wortlaute")
+expect(HW, dict(hw, kindeswohl={"text": ""}), False, "leerer Hinweis-Wortlaut")
+BR = "berater.schema.json"
+br = {"schema_version": "1", "version": "syn-1", "herkunft": "synthetisch",
+      "perspektiven": [{"name": "Mehrsprachigkeit und DaZ", "beschreibung": "x"}]}
+expect(BR, br, True, "Berater-Perspektiven")
+expect(BR, dict(br, perspektiven=[]), False, "keine Berater-Perspektive")
+gfp = {"schema_version": "2", "paket_id": "p-0000abcd", "art": "protokoll_goldfisch", "session_id": "s-0000abcd",
+       "erwartete_rueckgabe": "befunde", "anonymisierung_geprueft": True,
+       "inhalt": {"modus": "intervision", "schluesselfrage": "x", "methode": "resonanzrunde", "beitraege": ["y"], "mitnahme": "z"}}
+expect(FP, gfp, True, "Goldfisch-Paket zum Protokoll")
+expect(FP, dict(gfp, inhalt=dict(gfp["inhalt"], rollen={})), False, "Goldfisch-Paket zum Protokoll mit Rollen")
+
+# Task 4.1: app settings (Screen 13)
+ES = "einstellungen.schema.json"
+es = {"schema_version": "1", "verbindung": "desktop", "qualifikationen": ["schulpsychologin"], "darstellung": "system"}
+expect(ES, es, True, "Einstellungen der App")
+expect(ES, dict(es, qualifikationen=["aerztin"]), False, "Einstellungen mit unbekannter Qualifikation")
+expect(ES, dict(es, name="Muster"), False, "Einstellungen mit Namen")
+
+# Task 5: learning loop
+LB = "lernbausteine.schema.json"
+lb = {"schema_version": "1", "version": "1", "bausteine": [{"baustein_id": "lb-0000abcd", "bereich": "pruefverhalten",
+      "ziel": "goldfisch", "herkunft": "gutachten", "text": "[synthetisch] Fachbegriffe als erklärungsbedürftig melden.",
+      "vorschlag_id": "vs-0000abcd"}]}
+expect(LB, lb, True, "Lernbausteine")
+bad = copy(lb); bad["bausteine"][0]["ziel"] = "entwurf"
+expect(LB, bad, False, "Prüfverhalten für den Entwurf")
+bad = copy(lb); bad["version"] = "../x"
+expect(LB, bad, False, "Lernbausteine mit Pfad als Version")
+bad = copy(lb); bad["bausteine"][0]["herkunft"] = "intervision"; bad["bausteine"][0]["ziel"] = "stil"
+expect(LB, bad, False, "Intervisions-Baustein für den Stil")
+AV = "aenderungsvorschlag.schema.json"
+av = {"schema_version": "1", "vorschlag_id": "vs-0000abcd", "datei": "lernbausteine.json", "herkunft": "gutachten",
+      "bereich": "sprache", "signal_ids": ["ls-00000001", "ls-00000002", "ls-00000003"],
+      "aenderung": {"art": "hinzufuegen", "ziel": "entwurf", "text": "[synthetisch] Kurze Sätze."},
+      "begruendung": "[synthetisch] drei Änderungen", "status": "offen", "basis_version": "keine"}
+expect(AV, av, True, "Änderungsvorschlag")
+expect(AV, dict(av, datei="regelwerk.json"), False, "Vorschlag für das Regelwerk")
+expect(AV, dict(av, signal_ids=av["signal_ids"][:2]), False, "Vorschlag aus zwei Lernsignalen")
+expect(AV, dict(av, herkunft="supervision"), False, "Vorschlag aus der Supervision")
+expect(AV, dict(av, status="eval_bestanden"), False, "Eval bestanden ohne Ergebnis")
+ev = {"bestanden": True, "faelle": [], "llm_evals": "offen"}
+expect(AV, dict(av, status="freigegeben", eval=ev, neue_version="1", llm_bestaetigt={"bestaetigt": True, "am": "2026-11-22"}),
+       True, "Freigegebener Vorschlag mit bestätigtem LLM-Teil")
+expect(AV, dict(av, status="freigegeben", eval=ev, neue_version="1"), False, "Freigabe ohne bestätigten LLM-Teil")
+gp_lb = dict(gp, inhalt=dict(gp["inhalt"], lernbausteine=[{"bereich": "sprache", "text": "[synthetisch] Kurze Sätze."}]))
+expect(FP, gp_lb, True, "Gutachten-Paket mit Lernbausteinen")
+gp_lb2 = dict(gp, inhalt=dict(gp["inhalt"], lernbausteine=[{"bereich": "sprache", "text": "x", "vorschlag_id": "vs-0000abcd"}]))
+expect(FP, gp_lb2, False, "Lernbausteine mit Vorschlags-ID im Paket")
+
 if failures:
     print("\n".join(failures))
     print(f"FEHLER: {len(failures)} von {checks} Pruefungen")

@@ -1,14 +1,13 @@
 """Start type mcp: MCP server for Claude (docs/listen.md, MCP-Tools der Engine). Only anonymised, approved data;
 no import, OCR or recognition modules (ADR 0001). Errors carry only a code. The internal diagnosis is never
-returned: it is not part of gutachten_input and no tool reads it. speichere_protokoll follows in Task 3, the
-Task-5 tools in Task 5."""
+returned: it is not part of gutachten_input and no tool reads it. The Task-5 tools follow in Task 5."""
 import functools
 
 from mcp.server import MCPServer
 from mcp.server.mcpserver.exceptions import ToolError
 from pydantic import ValidationError
 
-from . import belege, config, packages, rules, store
+from . import belege, config, packages, rubberduck, rules, store
 from .contracts import validate
 from .errors import EngineError
 from .logging_safe import log
@@ -150,6 +149,9 @@ def speichere_befunde(session_id: str, rolle: str, befunde: list[dict]) -> dict:
     record = _record(session_id)
     for b in befunde:
         validate("befund", b | {"befund_id": "bf-00000000", "entscheidung": {"status": "offen"}})
+    if record["session"]["modus"] != "gutachten":  # review of a protocol, counted even without findings
+        rubberduck.check_protokoll_befunde(record, rolle, befunde)
+        rubberduck.pruefung_vermerken(record, rolle)
     neue = packages.check_befunde(befunde, rolle, record.get("gutachten_input"), config.load())
     record.setdefault("befunde", []).extend(neue)
     store.save(record)
@@ -202,6 +204,52 @@ def hole_wissensbasis(name: str) -> str:
     return packages.wissen(name)
 
 
+@mcp.tool()
+@_codes
+def hole_rubberduck_vorgaben() -> dict:
+    """Hint wordings (kindeswohl, akute_gefaehrdung) and adviser perspectives from the configuration, null if missing."""
+    return rubberduck.vorgaben()
+
+
+@mcp.tool()
+@_codes
+def hole_protokoll(session_id: str) -> dict:
+    """Current state of the intervision or supervision protocol of a session."""
+    protokoll = rubberduck.current(_record(session_id))
+    if protokoll is None:
+        raise EngineError("E_NICHT_GEFUNDEN")
+    return protokoll
+
+
+@mcp.tool()
+@_codes
+def hole_protokoll_goldfisch(session_id: str) -> dict:
+    """Only key question or concern, contributions or hypotheses and what the psychologist takes away, for the
+    Goldfisch."""
+    return rubberduck.goldfisch_sicht(_record(session_id))
+
+
+@mcp.tool()
+@_codes
+def speichere_protokoll(session_id: str, protokoll: dict) -> dict:
+    """Store a new state of the intervision or supervision protocol. Each save stays in the phase or moves exactly
+    one on; content of a later phase (e.g. advice before the method choice) is rejected with E_PHASENFOLGE."""
+    record = _record(session_id)
+    result = rubberduck.speichere(record, protokoll)
+    store.save(record)
+    return result
+
+
+@mcp.tool()
+@_codes
+def speichere_hypothesenpruefung(session_id: str, vignette: str, schlussfolgerung: str, befunde: list[dict]) -> dict:
+    """Store the Goldfisch's findings on a vignette and conclusion (/hypothese-pruefen) in the running protocol."""
+    record = _record(session_id)
+    result = rubberduck.speichere_hypothese(record, vignette, schlussfolgerung, befunde)
+    store.save(record)
+    return result
+
+
 class _CodeOnlyArguments:
     """The SDK reports argument errors with the pydantic text, which repeats the input value (EGM E21). This keeps
     the SDK's validation and replaces only the message by the code."""
@@ -220,7 +268,36 @@ class _CodeOnlyArguments:
             raise ValidationError.from_exception_data("E_SCHEMA", []) from None
 
 
-# shortcut: wraps the private ToolManager._tools of mcp 2.3.0; recheck when mcp is upgraded (test_step_1_7 covers it).
+# ---------------------------------------------------------------- learning loop (Task 5, only /verbessern)
+
+@mcp.tool()
+@_codes
+def hole_lernsignale() -> dict:
+    """Learning signals from reports and intervision (never supervision, never the diagnosis comparison), grouped by
+    origin and area, with the signals already used in a proposal marked."""
+    from . import lernschleife
+    return lernschleife.signale_uebersicht()
+
+
+@mcp.tool()
+@_codes
+def schlage_konfiguration_vor(vorschlag: dict) -> dict:
+    """Argument: {"vorschlag": {...}}. Propose one change to lernbausteine.json from at least three unused signals of the same origin and area.
+    Every other file is locked (rule set, scale, templates, catalogue, wordings, ICD-10, comparison, supervision)."""
+    from . import lernschleife
+    return lernschleife.schlage_vor(vorschlag)
+
+
+@mcp.tool()
+@_codes
+def starte_evals(vorschlag_id: str) -> dict:
+    """Run the deterministic eval suite for a proposal; a case that fails with the change rejects it. The release
+    happens only in the app."""
+    from . import lernschleife
+    return lernschleife.starte_evals(vorschlag_id)
+
+
+# shortcut: wraps the private ToolManager._tools of mcp 2.3.0; after every @mcp.tool() above (EGM Task 5 C6); recheck when mcp is upgraded (test_step_1_7 covers it).
 for _tool in mcp._tool_manager._tools.values():
     object.__setattr__(_tool, "fn_metadata", _CodeOnlyArguments(_tool.fn_metadata))
 

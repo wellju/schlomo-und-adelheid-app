@@ -50,7 +50,8 @@ def test_synthetic_configuration_is_valid_and_marked(cfg):
 
 def test_overlapping_scale_rejected(cfg, tmp_path):
     for name in config.FILES.values():
-        (tmp_path / name).write_text((SYN / name).read_text(encoding="utf-8"), encoding="utf-8")
+        if (SYN / name).exists():  # lernbausteine.json (Task 5) has no synthetic file: nothing learned yet
+            (tmp_path / name).write_text((SYN / name).read_text(encoding="utf-8"), encoding="utf-8")
     skala = json.loads((tmp_path / "kategorienskala.json").read_text(encoding="utf-8"))
     skala["eintraege"][1]["von"] = 60  # overlaps 40..69
     (tmp_path / "kategorienskala.json").write_text(json.dumps(skala), encoding="utf-8")

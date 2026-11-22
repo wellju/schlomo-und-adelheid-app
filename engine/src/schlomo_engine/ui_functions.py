@@ -6,7 +6,7 @@ from datetime import date
 from pathlib import Path
 
 from . import (__version__, belege, config, derive, docx_template, external, importer, packages, ram, recognition,
-               rules, store)
+               rubberduck, rules, store)
 from .contracts import schema_versions, validate
 from .errors import EngineError
 from .ids import new_id
@@ -260,12 +260,16 @@ def eingabe_speichern(args: dict, ctx=None) -> dict:
     if not isinstance(gi, dict) or gi.get("session_id") != session["session_id"] \
             or gi.get("gutachtentyp") != session.get("gutachtentyp"):
         raise EngineError("E_SCHEMA", "argumente")
+    from .app_functions import gespeicherte_qualifikationen
+    if (quali := gespeicherte_qualifikationen()) is not None:
+        gi = gi | {"verfasserin": {"qualifikationen": quali}}  # one source for Q1: the profile of Screen 13 (EGM B5)
     validate("gutachten-input", gi)  # also rejects a diagnosis in SPF and one without Q1
     if funde := _freitext_offen(session["session_id"], gi, args):
         return {"gespeichert": False, "funde": funde}
     cfg = config.load()
     record["gutachten_input"] = gi
-    session["versionen"].update(regelwerk=cfg.version("regelwerk"), testkatalog=cfg.version("testkatalog"))
+    session["versionen"].update(regelwerk=cfg.version("regelwerk"), testkatalog=cfg.version("testkatalog"),
+                                konfiguration=cfg.lernbausteine["version"] if cfg.lernbausteine else NOT_CONFIGURED)
     if session["status"] == "import":
         session["status"] = "eingabe"
     store.save(record)
@@ -364,13 +368,8 @@ def vorlage_zuordnen(args: dict, ctx=None) -> dict:
     return {"vorlage_id": vorlage["vorlage_id"]}
 
 
-def docx_exportieren(args: dict, ctx=None) -> dict:
-    """Export the latest draft into the template. Blocks on export rules, failed evidence, missing sections, the type
-    without template, a missing rule set, and an existing target file (no overwrite)."""
-    record = store.load(str(args.get("session_id", "")))
-    target = Path(str(args.get("ziel_pfad", "")))
-    if target.suffix.lower() != ".docx":
-        raise EngineError("E_SCHEMA", "argumente")
+def _export_bereit(record: dict):
+    """Every export lock in one place (also for the preview of Screen 06). Returns draft, input, template, config."""
     if not record.get("entwuerfe") or "gutachten_input" not in record:
         raise EngineError("E_NICHT_GEFUNDEN")
     draft, gi = record["entwuerfe"][-1], record["gutachten_input"]
@@ -391,15 +390,59 @@ def docx_exportieren(args: dict, ctx=None) -> dict:
         raise EngineError("E_BLOCKIERT")
     if belege.pruefe_belege(draft, gi, cfg):
         raise EngineError("E_BELEG")
+    return draft, gi, vorlage, cfg
+
+
+def docx_exportieren(args: dict, ctx=None) -> dict:
+    """Export the latest draft into the template. Blocks on export rules, failed evidence, missing sections, the type
+    without template, a missing rule set, and an existing target file (no overwrite)."""
+    record = store.load(str(args.get("session_id", "")))
+    target = Path(str(args.get("ziel_pfad", "")))
+    if target.suffix.lower() != ".docx":
+        raise EngineError("E_SCHEMA", "argumente")
+    draft, gi, vorlage, cfg = _export_bereit(record)
     sections, tables = belege.render(draft, gi, cfg)
     data = docx_template.fill((_vorlagen_dir() / vorlage["datei"]).read_bytes(), vorlage, sections, tables)
     store.write_new(target, data)
     return {"entwurf_version": draft["entwurf_version"]}
 
 
+def export_vorschau(args: dict, ctx=None) -> dict:
+    """Screen 06: the text as it will stand in the template, the header labels that stay placeholders, and the lock
+    (error code) if the export would refuse. Nothing is written."""
+    record = store.load(str(args.get("session_id", "")))
+    try:
+        draft, gi, vorlage, cfg = _export_bereit(record)
+        sperre = None
+    except EngineError as e:
+        if not record.get("entwuerfe") or "gutachten_input" not in record:
+            raise
+        sperre = e.as_dict()
+        draft, gi, cfg, vorlage = record["entwuerfe"][-1], record["gutachten_input"], config.load(), None
+    sections, tables = belege.render(draft, gi, cfg)
+    return {"entwurf_version": draft["entwurf_version"], "sperre": sperre,
+            "abschnitte": [{"abschnitt_id": a["abschnitt_id"], "text": sections.get(a["abschnitt_id"], ""),
+                            "tabellen": tables.get(a["abschnitt_id"], [])} for a in draft["abschnitte"]],
+            "kopffelder": (vorlage or {}).get("kopffelder", []),
+            "ueberschriften": {a["abschnitt_id"]: a["ueberschrift"] for a in (vorlage or {}).get("abschnitte", [])},
+            "vorlage_id": draft["vorlage_id"]}
+
+
 # Fields that hold JSON pointers, IDs or versions, never free text; only these are exempt from the re-check (EGM E02).
 _NO_FREE_TEXT = {"quellen", "feld", "felder", "wert_quelle", "baustein_quelle", "schema_version", "regel_version",
                  "regelwerk_version", "testkatalog_version", "regelergebnis_version", "entwurf_version"}
+# Enum fields (the schema checks them before the free text check): a value from the enum cannot hold a name. Only
+# such a value is exempt, never any text under the same key (Task 4.3: the NER flagged "schulpsychologin"; EGM C21).
+_ENUM_WERTE = {
+    "qualifikationen": {"schulpsychologin", "klinische_psychologin", "gesundheitspsychologin"},
+    "gutachtentyp": {"spf", "lrs", "rechenstoerung", "emotional_soziale_entwicklung"},
+    "art": {"gespraech", "bericht", "vorbefund", "fragebogen", "sonstiges", "kindeswohl", "akute_gefaehrdung"},
+    "ebene": {"index", "subtest", "fall", "beziehung", "rolle_und_system", "person", "ethik_und_qualitaet"},
+    "skala": {"iq", "wertpunkte", "t", "pr"},
+    "klinischer_eindruck": {"dokumentiert", "fehlt", "nicht_anwendbar"},
+    "intelligenztest": {"dokumentiert", "fehlt", "nicht_anwendbar"},
+    "befragung_adaptives_verhalten": {"dokumentiert", "fehlt", "nicht_anwendbar"},
+}
 
 
 def _texts(node, pointer="", key=""):
@@ -411,16 +454,16 @@ def _texts(node, pointer="", key=""):
     elif isinstance(node, list):
         for i, v in enumerate(node):
             yield from _texts(v, f"{pointer}/{i}", key)
-    elif isinstance(node, str):
+    elif isinstance(node, str) and node not in _ENUM_WERTE.get(key, ()):
         yield pointer, node
 
 
-def _freitext_funde(session_id: str, node, use_ner: bool) -> list[dict]:
+def _freitext_funde(session_id: str, node, use_ner: bool, names_needed: bool = True) -> list[dict]:
     """Recognition on free text typed in the app or sent out. Needs the known names of this run: after a restart
     they are gone and must be entered again, otherwise stage 1 would silently fall away (EGM E01, E02)."""
-    if not ram.names_set(session_id):
+    if names_needed and not ram.names_set(session_id):
         raise EngineError("E_BLOCKIERT", "namen_fehlen")
-    names = ram.names(session_id)
+    names = ram.names(session_id) if ram.names_set(session_id) else []
     return [{"feld": p, "text": f.text, "kategorie": f.kategorie, "sicher": not f.unsicher}
             for p, text in _texts(node) for f in recognition.detect_text(text, 0, names, None, use_ner)]
 
@@ -439,8 +482,18 @@ def erzeuge_paket(args: dict, ctx=None) -> dict:
     decided where the text entered: at the release of each document and when free text was saved."""
     record = store.load(str(args.get("session_id", "")))
     paket = packages.make_package(record, str(args.get("art", "")), config.load(), args)
-    if any(f["sicher"] for f in _freitext_funde(record["session"]["session_id"], paket["inhalt"], use_ner=False)):
+    # Rubberduck packages hold no case data from the app, so no list of names is asked for; the rules still run
+    # over the free text the psychologist typed into Claude (EGM Task 3 B14).
+    names_needed = record["session"]["modus"] == "gutachten"
+    if any(f["sicher"] for f in _freitext_funde(record["session"]["session_id"], paket["inhalt"], use_ner=False,
+                                               names_needed=names_needed)):
         raise EngineError("E_ANONYMISIERUNG_OFFEN")
+    ziel = args.get("ziel_pfad")
+    if ziel is not None and (not isinstance(ziel, str) or Path(ziel).suffix.lower() != ".json"):
+        raise EngineError("E_SCHEMA", "argumente")
+    if ziel:  # Task 4.3: the app's save dialog; written whole or not at all, never over an existing file. Written
+        # before the package is registered, so a refused target leaves no open package behind (EGM C5)
+        store.write_new(Path(ziel), json.dumps(paket, ensure_ascii=False, indent=1).encode("utf-8"))
     packages.register(record["session"]["session_id"], paket)
     return {"fallpaket": paket}
 
@@ -450,6 +503,14 @@ def lies_rueckgabe(args: dict, ctx=None) -> dict:
     if not isinstance(args.get("text"), str):
         raise EngineError("E_SCHEMA", "argumente")
     return {"gueltig": True, **packages.read_return(record, args["text"], config.load())}
+
+
+def protokoll_beenden(args: dict, ctx=None) -> dict:
+    """Ends an intervision or supervision protocol in phase abschluss; review findings stored so far go with it."""
+    record = store.load(str(args.get("session_id", "")))
+    result = rubberduck.beenden(record)
+    store.save(record)
+    return result
 
 
 def _q1_record(args: dict) -> dict:
@@ -467,6 +528,8 @@ def interne_diagnose_speichern(args: dict, ctx=None) -> dict:
     diagnose = args.get("interne_diagnose")
     if not isinstance(diagnose, dict):
         raise EngineError("E_SCHEMA", "argumente")
+    if funde := _freitext_offen(record["session"]["session_id"], {"text": diagnose.get("text")}, args):
+        return {"gespeichert": False, "funde": funde}  # free text goes through the recognition (EGM B4)
     record["interne_diagnose"] = diagnose | {"erfasst_vor_vorschlaegen": True}
     store.save(record)
     return {"gespeichert": True}
@@ -486,12 +549,15 @@ def diagnosevergleich_laden(args: dict, ctx=None) -> dict:
     gi = record["gutachten_input"]
     vorschlaege = [v for v in record.get("diagnosevorschlaege", []) if v["quelle"] == "claude"]
     engine = rules.engine_diagnosevorschlag(gi, rules.pruefe_fachregeln(gi, cfg), cfg)
-    record["diagnosevorschlaege"] = [engine] + vorschlaege
     claude = vorschlaege[-1] if vorschlaege else None
-    record["vergleich"] = {"engine": _vergleich(record["interne_diagnose"], engine),
-                           "claude": _vergleich(record["interne_diagnose"], claude),
-                           **({"notiz": record["vergleich"]["notiz"]} if record.get("vergleich", {}).get("notiz") else {})}
-    store.save(record)
+    vergleich = {"engine": _vergleich(record["interne_diagnose"], engine),
+                 "claude": _vergleich(record["interne_diagnose"], claude),
+                 **({"notiz": record["vergleich"]["notiz"]} if record.get("vergleich", {}).get("notiz") else {})}
+    if record.get("diagnosevorschlaege") != [engine] + vorschlaege or record.get("vergleich") != vergleich:
+        # written only on a change: the app polls this while waiting for Claude (EGM B3)
+        record["diagnosevorschlaege"] = [engine] + vorschlaege
+        record["vergleich"] = vergleich
+        store.save(record)
     return {"interne_diagnose": record["interne_diagnose"], "engine": engine, "claude": claude,
             "vergleich": record["vergleich"]}
 
@@ -500,14 +566,17 @@ def vergleich_notiz_speichern(args: dict, ctx=None) -> dict:
     record = _q1_record(args)
     if "vergleich" not in record or not isinstance(args.get("notiz"), str):
         raise EngineError("E_BLOCKIERT" if "vergleich" not in record else "E_SCHEMA")
+    if funde := _freitext_offen(record["session"]["session_id"], {"notiz": args["notiz"]}, args):
+        return {"gespeichert": False, "funde": funde}  # EGM B4
     record["vergleich"]["notiz"] = args["notiz"]
     store.save(record)
-    return {"vergleich": record["vergleich"]}
+    return {"gespeichert": True, "vergleich": record["vergleich"]}
 
 
 FUNCTIONS = {
     "erzeuge_paket": erzeuge_paket,
     "lies_rueckgabe": lies_rueckgabe,
+    "protokoll_beenden": protokoll_beenden,
     "interne_diagnose_speichern": interne_diagnose_speichern,
     "diagnosevergleich_laden": diagnosevergleich_laden,
     "vergleich_notiz_speichern": vergleich_notiz_speichern,
@@ -517,6 +586,7 @@ FUNCTIONS = {
     "vorlage_importieren": vorlage_importieren,
     "vorlage_zuordnen": vorlage_zuordnen,
     "docx_exportieren": docx_exportieren,
+    "export_vorschau": export_vorschau,
     "alter_berechnen": alter_berechnen,
     "schulbesuch_berechnen": schulbesuch_berechnen,
     "normwerte_ableiten": normwerte_ableiten,
@@ -533,3 +603,7 @@ FUNCTIONS = {
     "dokument_importieren": dokument_importieren,
     "ocr_ausfuehren": ocr_ausfuehren,
 }
+
+from .app_functions import FUNCTIONS as _APP_FUNCTIONS  # noqa: E402  (Task 4; imports no function of this module)
+
+FUNCTIONS.update(_APP_FUNCTIONS)

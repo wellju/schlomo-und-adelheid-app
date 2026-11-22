@@ -1,0 +1,11 @@
+{
+  "schema_version": "1",
+  "version": "syn-1",
+  "herkunft": "synthetisch",
+  "kindeswohl": {
+    "text": "[synthetisch] Hinweis der KI: Nach meiner Einschätzung könnte eine Gefährdungsmeldung an die MA 11 nötig sein. Die Entscheidung triffst du."
+  },
+  "akute_gefaehrdung": {
+    "text": "[synthetisch] Hinweis der KI: Das klingt nach akuter Gefährdung. Bitte folge dem vorgeschriebenen Vorgehen. Die Entscheidung triffst du."
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hinweise.schema.json",
+  "title": "Hinweis-Wortlaute",
+  "description": "konfiguration/hinweise.json: Wortlaute der Hinweise bei möglicher Kindeswohlgefährdung und akuter Gefährdung in Intervision und Supervision. Pflegt die Psychologin; für /verbessern gesperrt (Nachtrag 1).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "version", "herkunft", "kindeswohl", "akute_gefaehrdung"],
+  "properties": {
+    "schema_version": { "const": "1" },
+    "version": { "type": "string", "minLength": 1 },
+    "herkunft": { "enum": ["synthetisch", "psychologin"] },
+    "kindeswohl": { "$ref": "#/$defs/wortlaut" },
+    "akute_gefaehrdung": { "$ref": "#/$defs/wortlaut" }
+  },
+  "$defs": {
+    "wortlaut": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text"],
+      "properties": { "text": { "type": "string", "minLength": 1, "maxLength": 2000 } }
+    }
+  }
+}

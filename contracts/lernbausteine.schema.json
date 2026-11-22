@@ -1,0 +1,173 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "lernbausteine.schema.json",
+  "title": "Lernbausteine",
+  "description": "konfiguration/lernbausteine.json (Task 5): gelernte Hinweise zu Sprache, Struktur und Prüfverhalten, versioniert, nur nach Freigabe durch die Psychologin. Prüfverhalten heißt Formulierung und Gewichtung der Prüferhinweise, nie Regelparameter.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "version",
+    "bausteine"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,39}$"
+    },
+    "bausteine": {
+      "type": "array",
+      "maxItems": 50,
+      "items": {
+        "$ref": "#/$defs/baustein"
+      }
+    }
+  },
+  "$defs": {
+    "baustein": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "baustein_id",
+        "bereich",
+        "ziel",
+        "herkunft",
+        "text",
+        "vorschlag_id"
+      ],
+      "properties": {
+        "baustein_id": {
+          "type": "string",
+          "pattern": "^lb-[0-9a-f]{8}$"
+        },
+        "bereich": {
+          "enum": [
+            "sprache",
+            "struktur",
+            "pruefverhalten"
+          ]
+        },
+        "ziel": {
+          "enum": [
+            "entwurf",
+            "stil",
+            "goldfisch",
+            "elefant"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "vorschlag_id": {
+          "type": "string",
+          "pattern": "^vs-[0-9a-f]{8}$"
+        },
+        "herkunft": {
+          "enum": [
+            "gutachten",
+            "intervision"
+          ],
+          "description": "Woher die Lernsignale kamen: Gutachten-Bausteine gehen an die Prüfer der Gutachten, Intervisions-Bausteine an die Prüfer der Protokolle (EGM Task 5 B7)."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "bereich": {
+                "enum": [
+                  "sprache",
+                  "struktur"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "ziel": {
+                "enum": [
+                  "entwurf",
+                  "stil"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "bereich": {
+                "const": "pruefverhalten"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "ziel": {
+                "enum": [
+                  "stil",
+                  "goldfisch",
+                  "elefant"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "herkunft": {
+                "const": "intervision"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "bereich": {
+                "const": "pruefverhalten"
+              },
+              "ziel": {
+                "enum": [
+                  "goldfisch",
+                  "elefant"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "fuer_claude": {
+      "description": "Sicht in Paketen und MCP-Tools: nur Bereich und Text der Bausteine des jeweiligen Ziels.",
+      "type": "array",
+      "maxItems": 50,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "bereich",
+          "text"
+        ],
+        "properties": {
+          "bereich": {
+            "enum": [
+              "sprache",
+              "struktur",
+              "pruefverhalten"
+            ]
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          }
+        }
+      }
+    }
+  }
+}

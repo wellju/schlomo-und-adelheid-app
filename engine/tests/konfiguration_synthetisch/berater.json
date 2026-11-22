@@ -1,0 +1,19 @@
+{
+  "schema_version": "1",
+  "version": "syn-1",
+  "herkunft": "synthetisch",
+  "perspektiven": [
+    {
+      "name": "Mehrsprachigkeit und DaZ",
+      "beschreibung": "[synthetisch] Achtet auf Sprachstand, Lerngelegenheit und Erstsprache als mögliche Erklärungen."
+    },
+    {
+      "name": "Systemische Sicht",
+      "beschreibung": "[synthetisch] Achtet auf Beziehungen zwischen Kind, Familie, Klasse und Schule."
+    },
+    {
+      "name": "Lehrkraft",
+      "beschreibung": "[synthetisch] Achtet auf das, was im Unterricht machbar ist."
+    }
+  ]
+}

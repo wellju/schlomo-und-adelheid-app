@@ -99,7 +99,11 @@
         "pruefung_elefant",
         "diagnosevorschlag",
         "stil_lernen",
-        "hypothese"
+        "hypothese",
+        "intervision",
+        "supervision",
+        "protokoll_elefant",
+        "protokoll_goldfisch"
       ]
     },
     "session_id": {
@@ -111,7 +115,9 @@
         "gutachten-output",
         "befunde",
         "diagnosevorschlag",
-        "stilprofil"
+        "stilprofil",
+        "protokoll-intervision",
+        "protokoll-supervision"
       ]
     },
     "anonymisierung_geprueft": {
@@ -165,6 +171,10 @@
               },
               "bausteine": {
                 "$ref": "#/$defs/bausteine"
+              },
+              "lernbausteine": {
+                "$ref": "lernbausteine.schema.json#/$defs/fuer_claude",
+                "description": "Freigegebene Lernbausteine für dieses Ziel (Task 5); ändern nie Regeln, Grenzwerte oder Wortlaute."
               }
             }
           }
@@ -197,6 +207,10 @@
               },
               "stilprofil": {
                 "$ref": "stilprofil.schema.json#/$defs/fuer_claude"
+              },
+              "lernbausteine": {
+                "$ref": "lernbausteine.schema.json#/$defs/fuer_claude",
+                "description": "Freigegebene Lernbausteine für dieses Ziel (Task 5); ändern nie Regeln, Grenzwerte oder Wortlaute."
               }
             }
           }
@@ -244,6 +258,10 @@
                   "emotional_soziale_entwicklung"
                 ],
                 "description": "Nur damit der Goldfisch bei spf wertende Sprache besonders gewichtet (Nachtrag 1)."
+              },
+              "lernbausteine": {
+                "$ref": "lernbausteine.schema.json#/$defs/fuer_claude",
+                "description": "Freigegebene Lernbausteine für dieses Ziel (Task 5); ändern nie Regeln, Grenzwerte oder Wortlaute."
               }
             }
           }
@@ -286,6 +304,10 @@
               },
               "bausteine": {
                 "$ref": "#/$defs/bausteine"
+              },
+              "lernbausteine": {
+                "$ref": "lernbausteine.schema.json#/$defs/fuer_claude",
+                "description": "Freigegebene Lernbausteine für dieses Ziel (Task 5); ändern nie Regeln, Grenzwerte oder Wortlaute."
               }
             }
           }
@@ -411,6 +433,254 @@
               },
               "schlussfolgerung": {
                 "$ref": "#/$defs/kurztext"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "art": {
+            "const": "intervision"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "erwartete_rueckgabe": {
+            "const": "protokoll-intervision"
+          },
+          "inhalt": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "hinweise",
+              "berater_perspektiven"
+            ],
+            "properties": {
+              "hinweise": {
+                "description": "Hinweis-Wortlaute aus konfiguration/hinweise.json, null wenn nicht hinterlegt.",
+                "anyOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "kindeswohl",
+                      "akute_gefaehrdung"
+                    ],
+                    "properties": {
+                      "kindeswohl": {
+                        "$ref": "#/$defs/kurztext"
+                      },
+                      "akute_gefaehrdung": {
+                        "$ref": "#/$defs/kurztext"
+                      }
+                    }
+                  }
+                ]
+              },
+              "berater_perspektiven": {
+                "description": "Aus konfiguration/berater.json, null wenn nicht hinterlegt.",
+                "anyOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "berater.schema.json#/properties/perspektiven"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "art": {
+            "const": "supervision"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "erwartete_rueckgabe": {
+            "const": "protokoll-supervision"
+          },
+          "inhalt": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "hinweise",
+              "haltung",
+              "haltung_version"
+            ],
+            "properties": {
+              "hinweise": {
+                "description": "Hinweis-Wortlaute aus konfiguration/hinweise.json, null wenn nicht hinterlegt.",
+                "anyOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "kindeswohl",
+                      "akute_gefaehrdung"
+                    ],
+                    "properties": {
+                      "kindeswohl": {
+                        "$ref": "#/$defs/kurztext"
+                      },
+                      "akute_gefaehrdung": {
+                        "$ref": "#/$defs/kurztext"
+                      }
+                    }
+                  }
+                ]
+              },
+              "haltung": {
+                "description": "wissensbasis/haltung.md, null wenn nicht hinterlegt.",
+                "anyOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/$defs/kurztext"
+                  }
+                ]
+              },
+              "haltung_version": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "art": {
+            "const": "protokoll_elefant"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "erwartete_rueckgabe": {
+            "const": "befunde"
+          },
+          "inhalt": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "protokoll"
+            ],
+            "description": "Elefant im Browser: das zurückgegebene Intervisionsprotokoll in Phase abschluss.",
+            "properties": {
+              "protokoll": {
+                "$ref": "protokoll-intervision.schema.json"
+              },
+              "lernbausteine": {
+                "$ref": "lernbausteine.schema.json#/$defs/fuer_claude",
+                "description": "Freigegebene Lernbausteine aus Intervision für diesen Prüfer (Task 5)."
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "art": {
+            "const": "protokoll_goldfisch"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "erwartete_rueckgabe": {
+            "const": "befunde"
+          },
+          "inhalt": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "modus",
+              "mitnahme"
+            ],
+            "description": "Goldfisch im Browser: nur Schlüsselfrage bzw. Anliegen, Methode, Beiträge bzw. Hypothesen und Mitnahme, von der Engine aus dem Protokoll gebildet.",
+            "properties": {
+              "modus": {
+                "enum": [
+                  "intervision",
+                  "supervision"
+                ]
+              },
+              "schluesselfrage": {
+                "anyOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/$defs/kurztext"
+                  }
+                ]
+              },
+              "anliegen": {
+                "anyOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/$defs/kurztext"
+                  }
+                ]
+              },
+              "methode": {
+                "anyOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              "beitraege": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/kurztext"
+                }
+              },
+              "hypothesen": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/kurztext"
+                }
+              },
+              "mitnahme": {
+                "anyOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/$defs/kurztext"
+                  }
+                ]
+              },
+              "lernbausteine": {
+                "$ref": "lernbausteine.schema.json#/$defs/fuer_claude",
+                "description": "Freigegebene Lernbausteine aus Intervision für diesen Prüfer (Task 5)."
               }
             }
           }

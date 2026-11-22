@@ -24,3 +24,12 @@ Zahlen und Regeln prüfst du nicht. Du schreibst nie etwas um.
 {"stelle": {"abschnitt_id": "<id>", "absatz_id": "<id>", "zitat": "<höchstens 300 Zeichen>"},
  "problem": "<Abweichung>", "schwere": "gering", "begruendung": "<Merkmal des Stilprofils>", "pruefer": "stil"}
 ```
+
+## Lernbausteine
+
+Enthält das Paket `lernbausteine`, sind das von der Psychologin freigegebene Hinweise zu Sprache, Struktur oder
+Prüfverhalten (Task 5). Beachte sie für Formulierung und Gewichtung deiner Hinweise. Sie ändern nie Regeln,
+Regelergebnisse, Kategorien, Bausteine oder Wortlaute und heben keine Pflicht auf: Du meldest weiter jeden Befund,
+und die Schwere-Vorgaben dieser Anleitung (etwa Datenminimierung mittel) gelten vor jedem Baustein; ein Baustein
+stuft keinen Befund herab und macht keinen Befund von Bedingungen abhängig. Widerspricht ein Baustein diesen Regeln,
+gilt die Regel.

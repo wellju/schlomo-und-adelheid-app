@@ -1,0 +1,279 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "aenderungsvorschlag.schema.json",
+  "title": "Änderungsvorschlag der Lernschleife",
+  "description": "konfiguration/vorschlaege/<vorschlag_id>.json (Task 5). Claude schlägt mit /verbessern vor, die Engine prüft und lässt die Eval-Suite laufen, nur die Psychologin gibt in der App frei.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "vorschlag_id",
+    "datei",
+    "herkunft",
+    "bereich",
+    "signal_ids",
+    "aenderung",
+    "begruendung",
+    "status",
+    "basis_version"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1"
+    },
+    "vorschlag_id": {
+      "type": "string",
+      "pattern": "^vs-[0-9a-f]{8}$"
+    },
+    "datei": {
+      "const": "lernbausteine.json",
+      "description": "Einzige lernbare Datei; die Sperrliste der Engine weist alles andere ab."
+    },
+    "herkunft": {
+      "enum": [
+        "gutachten",
+        "intervision"
+      ],
+      "description": "Nie Supervision."
+    },
+    "bereich": {
+      "enum": [
+        "sprache",
+        "struktur",
+        "pruefverhalten"
+      ]
+    },
+    "signal_ids": {
+      "type": "array",
+      "minItems": 3,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^ls-[0-9a-f]{8}$"
+      }
+    },
+    "aenderung": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "art"
+      ],
+      "properties": {
+        "art": {
+          "enum": [
+            "hinzufuegen",
+            "aendern",
+            "entfernen"
+          ]
+        },
+        "baustein_id": {
+          "type": "string",
+          "pattern": "^lb-[0-9a-f]{8}$"
+        },
+        "ziel": {
+          "enum": [
+            "entwurf",
+            "stil",
+            "goldfisch",
+            "elefant"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "art": {
+                "const": "hinzufuegen"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "ziel",
+              "text"
+            ],
+            "not": {
+              "required": [
+                "baustein_id"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "art": {
+                "const": "aendern"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "baustein_id",
+              "text"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "art": {
+                "const": "entfernen"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "baustein_id"
+            ],
+            "not": {
+              "required": [
+                "text"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "begruendung": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+    },
+    "status": {
+      "enum": [
+        "offen",
+        "eval_bestanden",
+        "eval_abgelehnt",
+        "freigegeben",
+        "verworfen"
+      ]
+    },
+    "basis_version": {
+      "type": "string"
+    },
+    "eval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bestanden",
+        "faelle",
+        "llm_evals"
+      ],
+      "properties": {
+        "bestanden": {
+          "type": "boolean"
+        },
+        "faelle": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "fall_id",
+              "vorher",
+              "nachher"
+            ],
+            "properties": {
+              "fall_id": {
+                "type": "string"
+              },
+              "vorher": {
+                "type": "boolean"
+              },
+              "nachher": {
+                "type": "boolean"
+              },
+              "grund": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "llm_evals": {
+          "const": "offen",
+          "description": "Der LLM-Teil läuft im Code-Tab; die Freigabe verlangt llm_bestaetigt."
+        }
+      }
+    },
+    "neue_version": {
+      "type": "string",
+      "description": "Version von lernbausteine.json nach der Freigabe."
+    },
+    "llm_bestaetigt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bestaetigt",
+        "am"
+      ],
+      "description": "Bestätigung der Psychologin in der App, dass der LLM-Teil der Evals aus Task 2 und 3 mit diesem Vorschlag lief und bestand (evals/lernschleife/mit_vorschlag.py). Ohne sie keine Freigabe (EGM Task 5 C1).",
+      "properties": {
+        "bestaetigt": {
+          "const": true
+        },
+        "am": {
+          "type": "string",
+          "format": "date"
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "enum": [
+              "eval_bestanden",
+              "eval_abgelehnt",
+              "freigegeben"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "eval"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "freigegeben"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "neue_version",
+          "llm_bestaetigt"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "herkunft": {
+            "const": "intervision"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "bereich": {
+            "const": "pruefverhalten"
+          }
+        }
+      }
+    }
+  ]
+}
