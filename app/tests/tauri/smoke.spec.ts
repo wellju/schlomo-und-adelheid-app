@@ -29,9 +29,18 @@ test('App startet mit Engine', async () => {
     }
     expect(ende, 'die App hat sich vor dem Anhängen beendet').toBeNull();
     expect(browser, 'WebView2 nicht erreichbar').toBeTruthy();
-    const page = browser!.contexts()[0].pages()[0];
+    const pages = browser!.contexts().flatMap((c) => c.pages());
+    console.log(`Seiten: ${pages.map((p) => p.url()).join(', ')}`);
+    const page = pages.find((p) => !p.url().startsWith('about:')) ?? pages[0];
+    page.on('console', (m) => console.log(`Konsole ${m.type()}: ${m.text()}`));
     await page.evaluate(() => { location.hash = '#/einstellungen'; });
-    await expect(page.getByRole('heading', { name: 'Noch nicht eingerichtet' })).toBeVisible();
+    try {
+      await expect(page.getByRole('heading', { name: 'Noch nicht eingerichtet' })).toBeVisible({ timeout: 30000 });
+    } catch (e) {
+      // Synthetic, empty data folder: the visible text says which state the window shows instead.
+      console.log(`Fenster ${page.url()}:\n${(await page.locator('body').innerText()).slice(0, 2000)}`);
+      throw e;
+    }
     console.log(`Start bis Handshake: ${Date.now() - t0} ms`);
     await page.getByRole('button', { name: 'Einrichten' }).click();
     await expect(page.getByRole('heading', { level: 1, name: 'Verbindung und Profil' })).toBeVisible();
